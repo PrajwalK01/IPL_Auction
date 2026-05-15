@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  ipl-auction:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - FIREBASE_CREDENTIALS=${FIREBASE_CREDENTIALS}
+    volumes:
+      - .:/app
+    restart: always
