@@ -57,8 +57,8 @@
                                 <div class="fs-1 text-warning"><i class="bi bi-lightning-fill"></i></div>
                                 <div>
                                     <h3 class="text-white mb-0">NOW ON SCREEN: <span class="text-warning">{{ state.player_id }}</span></h3>
-                                    <div class="fs-2 text-white">CURRENT BID: <span class="text-warning fw-900">₹{{ state.current_bid }}Cr</span></div>
-                                    <div class="text-white-50">Last Bidder: <span class="text-info fw-bold">{{ state.bidder_id or 'NONE' }}</span></div>
+                                    <div class="fs-2 text-white">CURRENT BID: <span class="text-warning fw-900" id="adminCurrentBid" style="transition: all 0.3s ease;">₹{{ state.current_bid }}Cr</span></div>
+                                    <div class="text-white-50">Last Bidder: <span class="text-info fw-bold" id="adminBidderId">{{ state.bidder_id or 'NONE' }}</span></div>
                                 </div>
                             </div>
                         </div>
@@ -79,7 +79,7 @@
                             </div>
                             <div class="d-flex justify-content-end gap-3">
                                 <form method="POST" action="{{ url_for('auction.sell_player') }}">
-                                    <button type="submit" class="btn btn-success btn-lg px-5 fw-bold" {% if not state.bidder_id %}disabled{% endif %}>
+                                    <button type="submit" id="adminSoldBtn" class="btn btn-success btn-lg px-5 fw-bold" {% if not state.bidder_id %}disabled{% endif %}>
                                         <i class="bi bi-hammer me-2"></i>SOLD
                                     </button>
                                 </form>
@@ -94,7 +94,42 @@
                 </div>
             </div>
         </div>
-        <script>setTimeout(() => { location.reload(); }, 3000);</script>
+        <script>
+            let lastAdminBid = "{{ state.current_bid }}";
+            async function fetchAdminLiveState() {
+                try {
+                    const res = await fetch("/auction/api/state");
+                    const data = await res.json();
+                    
+                    if (data.status === "idle" || data.player_id !== "{{ state.player_id }}") {
+                        window.location.reload(); 
+                        return;
+                    }
+                    
+                    if (data.current_bid != lastAdminBid) {
+                        lastAdminBid = data.current_bid;
+                        
+                        const bidEl = document.getElementById('adminCurrentBid');
+                        bidEl.innerText = "₹" + data.current_bid + "Cr";
+                        bidEl.style.color = "#4ade80";
+                        bidEl.style.transform = "scale(1.1)";
+                        setTimeout(() => { bidEl.style.color = ""; bidEl.style.transform = "scale(1)"; }, 500);
+                        
+                        document.getElementById('adminBidderId').innerText = data.bidder_id || 'NONE';
+                        
+                        const soldBtn = document.getElementById('adminSoldBtn');
+                        if (data.bidder_id) {
+                            soldBtn.disabled = false;
+                        } else {
+                            soldBtn.disabled = true;
+                        }
+                    }
+                } catch (e) {
+                    console.error("Admin fetch error", e);
+                }
+            }
+            setInterval(fetchAdminLiveState, 3000);
+        </script>
         {% endif %}
 
         <!-- Available Players List -->

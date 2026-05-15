@@ -282,8 +282,48 @@
         finally { checkAuctionState(); }
     }
 
-    // Poll every 2 seconds
-    setInterval(checkAuctionState, 2000);
+    // Add Number Animation for stats
+    document.addEventListener("DOMContentLoaded", () => {
+        const statValues = document.querySelectorAll('.stat-value');
+        statValues.forEach(el => {
+            const finalValText = el.innerText;
+            // Only animate if it's a pure number or starts with ₹
+            let targetNum = parseFloat(finalValText.replace(/[^0-9.]/g, ''));
+            if (isNaN(targetNum)) return;
+            
+            const isCurrency = finalValText.includes('₹');
+            const suffix = finalValText.includes('Cr') ? 'Cr' : '';
+            
+            let start = 0;
+            const duration = 1500;
+            const startTime = performance.now();
+            
+            function update(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                // easeOutQuad
+                const easeProgress = progress * (2 - progress);
+                
+                let currentVal = start + (targetNum - start) * easeProgress;
+                
+                if (isCurrency) {
+                    el.innerText = '₹' + currentVal.toFixed(2) + suffix;
+                } else {
+                    el.innerText = Math.floor(currentVal);
+                }
+                
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                } else {
+                    el.innerText = finalValText; // Ensure exact final value
+                }
+            }
+            requestAnimationFrame(update);
+        });
+    });
+
+    // Poll every 5 seconds (reduced reads)
+    setInterval(checkAuctionState, 5000);
     checkAuctionState();
 </script>
 {% endblock %}

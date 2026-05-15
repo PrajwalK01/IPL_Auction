@@ -66,9 +66,19 @@ def get_state_api():
         state = state_doc.to_dict()
         if state.get("status") == "bidding":
             pid = state.get("player_id")
+            # We can skip fetching player info if the frontend already has it, 
+            # but to be safe we'll fetch just the basic details needed by clients
             p_doc = db.collection("players").document(pid).get()
             if p_doc.exists:
-                state["player_name"] = p_doc.to_dict().get("player_name")
+                p_data = p_doc.to_dict()
+                state["player_name"] = p_data.get("player_name")
+                
+            if state.get("bidder_id"):
+                t_doc = db.collection("teams").document(state.get("bidder_id")).get()
+                if t_doc.exists:
+                    t_data = t_doc.to_dict()
+                    state["team_name"] = t_data.get("team_name")
+                    state["team_logo"] = t_data.get("team_logo")
         
         return state
     except Exception as e:
@@ -153,15 +163,22 @@ def team_bid():
         team = team_doc.to_dict()
         rem = float(team.get("player_purse", 0)) - float(team.get("player_spent", 0))
         
-        # Calculate next bid (Default increment 0.20 if not specified, or just match current+0.10)
         current = float(state.get("current_bid", 0))
-        next_bid = current + 0.10 # Basic 10L increment
+        
+        if state.get("bidder_id") is None:
+            # First bid matches base price exactly
+            next_bid = current
+        else:
+            if state.get("bidder_id") == team_id:
+                return {"success": False, "error": "You already hold the highest bid!"}
+            # Subsequent bids increment by 10L
+            next_bid = round(current + 0.10, 2)
         
         if rem < next_bid:
             return {"success": False, "error": "Insufficient Purse!"}
 
         state_ref.update({
-            "current_bid": round(next_bid, 2),
+            "current_bid": next_bid,
             "bidder_id": team_id,
             "last_bid_time": firestore.SERVER_TIMESTAMP
         })

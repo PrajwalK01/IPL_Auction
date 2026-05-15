@@ -74,9 +74,9 @@
                 <div class="row align-items-center">
                     <div class="col-md-7">
                         <div class="bid-label text-warning fw-bold tracking-widest text-uppercase mb-2">Current Bid</div>
-                        <div class="bid-value display-1 fw-900 text-white">₹{{ state.current_bid }}Cr</div>
+                        <div class="bid-value display-1 fw-900 text-white" id="liveBidValue" style="transition: all 0.3s ease;">₹{{ state.current_bid }}Cr</div>
                     </div>
-                    <div class="col-md-5 text-center mt-3 mt-md-0">
+                    <div class="col-md-5 text-center mt-3 mt-md-0" id="bidderBox">
                         {% if team_logo %}
                             <img src="{{ url_for('static', filename='uploads/logos/'+team_logo) }}" width="100" height="100" class="rounded-circle border border-4 border-warning mb-2 shadow-lg animate-pulse-slow">
                             <div class="fw-bold text-warning fs-4">{{ team_name }}</div>
@@ -204,9 +204,66 @@
     setInterval(updateTime, 1000);
     updateTime();
 
-    // Auto-refresh logic (Polling for now, could be Firebase Listener later)
-    setTimeout(() => {
-        location.reload();
-    }, 5000); // Refresh every 5 seconds to catch bid updates
+    // AJAX Polling logic to update bid without page reload
+    let lastBid = "{{ state.current_bid }}";
+    let lastBidder = "{{ state.bidder_id }}";
+    
+    async function fetchLiveState() {
+        try {
+            const res = await fetch("/auction/api/state");
+            const data = await res.json();
+            
+            if (data.status === "idle") {
+                window.location.reload(); // Go to idle screen
+                return;
+            }
+            
+            // If the player changed, reload to get new player info
+            if (data.player_id !== "{{ state.player_id }}") {
+                window.location.reload();
+                return;
+            }
+            
+            // Update bid if changed
+            if (data.current_bid != lastBid || data.bidder_id != lastBidder) {
+                lastBid = data.current_bid;
+                lastBidder = data.bidder_id;
+                
+                document.getElementById('liveBidValue').innerText = "₹" + data.current_bid + "Cr";
+                
+                const bidderBox = document.getElementById('bidderBox');
+                if (data.bidder_id && data.team_name) {
+                    let logoHtml = "";
+                    if (data.team_logo) {
+                        logoHtml = `<img src="/static/uploads/logos/${data.team_logo}" width="100" height="100" class="rounded-circle border border-4 border-warning mb-2 shadow-lg animate-pulse-slow">`;
+                    } else {
+                        logoHtml = `<div class="bidder-placeholder"><i class="bi bi-shield-shaded"></i></div>`;
+                    }
+                    bidderBox.innerHTML = `
+                        ${logoHtml}
+                        <div class="fw-bold text-warning fs-4 animate-slide-up">${data.team_name}</div>
+                    `;
+                } else {
+                    bidderBox.innerHTML = `
+                        <div class="bidder-placeholder"><i class="bi bi-shield-shaded"></i></div>
+                        <div class="text-muted fs-5">Waiting for bids...</div>
+                    `;
+                }
+                
+                // Add a flash effect to bid value
+                const bidValEl = document.getElementById('liveBidValue');
+                bidValEl.style.color = "#4ade80";
+                bidValEl.style.transform = "scale(1.1)";
+                setTimeout(() => {
+                    bidValEl.style.color = "white";
+                    bidValEl.style.transform = "scale(1)";
+                }, 500);
+            }
+        } catch (e) {
+            console.error("Error fetching live state", e);
+        }
+    }
+    
+    setInterval(fetchLiveState, 3000); // Poll every 3 seconds
 </script>
 {% endblock %}
