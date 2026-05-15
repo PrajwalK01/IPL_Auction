@@ -99,36 +99,33 @@ body {
 
 /* ── Dashboard Layout ─────────────────────────────────────── */
 .dashboard-navbar {
-  position: fixed;
-  top: 12px; left: 12px; right: 12px;
-  height: var(--navbar-h);
-  background: rgba(15, 23, 42, 0.8);
-  backdrop-filter: blur(10px);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-md);
+  position: sticky;
+  top: 0;
+  height: 64px;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--glass-border);
   z-index: 1050;
-  margin: 0 auto;
-  max-width: 1400px;
+  padding: 0 1.5rem !important;
 }
 
 .navbar-logo-icon {
-  width: 40px; height: 40px;
+  width: 38px; height: 38px;
   background: var(--grad-primary);
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
+  font-size: 1.25rem;
   color: #000;
-  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+  box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4);
 }
 
 .dashboard-wrapper {
   display: flex;
-  padding-top: calc(var(--navbar-h) + 32px);
-  min-height: 100vh;
-  padding-left: 12px;
-  padding-right: 12px;
+  padding: 24px;
+  min-height: calc(100vh - 64px);
   background: url('../img/dashboard-bg.png') no-repeat center center fixed;
   background-size: cover;
 }
@@ -138,14 +135,16 @@ body {
   flex-shrink: 0;
   background: var(--glass-bg);
   backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   margin-right: 20px;
   padding: 1.5rem 1rem;
-  height: calc(100vh - var(--navbar-h) - 52px);
+  height: calc(100vh - 112px);
   position: sticky;
-  top: calc(var(--navbar-h) + 24px);
+  top: 88px;
   z-index: 1020;
+  overflow-y: auto;
 }
 
 .sidebar-section-label {

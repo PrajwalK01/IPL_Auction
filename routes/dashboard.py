@@ -26,9 +26,9 @@ def index():
         all_players = [d.to_dict() for d in db.collection("players").stream()]
         all_teams   = [d.to_dict() for d in db.collection("teams").stream()]
 
-        # Filter in Python (Avoids Firebase Index errors)
-        active_players = [p for p in all_players if p.get("is_deleted") == 0 and p.get("is_active") == 1]
-        active_teams   = [t for t in all_teams if t.get("IsDeleted") == False and t.get("IsActive") == True]
+        # Filter in Python (Avoids Firebase Index errors) - Resilient to key casing
+        active_players = [p for p in all_players if (p.get("is_deleted") == 0 or p.get("IsDeleted") == False) and (p.get("is_active") == 1 or p.get("IsActive") == True)]
+        active_teams   = [t for t in all_teams if (t.get("IsDeleted") == False or t.get("is_deleted") == 0) and (t.get("IsActive") == True or t.get("is_active") == 1)]
 
         total_players = len(active_players)
         total_teams   = len(active_teams)

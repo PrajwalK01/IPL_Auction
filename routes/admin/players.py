@@ -45,14 +45,19 @@ def list_players():
     try:
         db = get_db()
         # Fetch everything once to avoid index issues
-        players_docs = db.collection("players").stream()
-        teams_data = {d.id: d.to_dict() for d in db.collection("teams").stream()}
+        players_docs = db.collection("players").get()
+        teams_data = {d.id: d.to_dict() for d in db.collection("teams").get()}
         
         players = []
         for doc in players_docs:
             p = doc.to_dict()
             if p.get("is_deleted") == 1: continue
-            if role_filter and p.get("role") != role_filter: continue
+            
+            # Case-insensitive role filtering
+            if role_filter:
+                p_role = str(p.get("role", "")).strip().lower()
+                if p_role != role_filter.strip().lower():
+                    continue
             
             p['id'] = doc.id
             if p.get("sold_to_team_id"):
