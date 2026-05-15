@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}{{ action }} Mentor — Admin{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+  <aside class="dashboard-sidebar">
+    <div class="sidebar-section-label">ADMIN MENU</div>
+    <ul class="sidebar-nav list-unstyled mb-0">
+      <li><a href="{{ url_for('dashboard.index') }}" class="sidebar-link"><i class="bi bi-grid-1x2-fill"></i><span>Dashboard</span></a></li>
+      <li><a href="{{ url_for('admin_mentors.list_mentors') }}" class="sidebar-link active"><i class="bi bi-person-workspace"></i><span>Mentors & Coaches</span></a></li>
+    </ul>
+  </aside>
+
+  <main class="dashboard-main animate-fade-in">
+    <div class="mb-4">
+      <h1 class="page-title mb-0">{{ action }} Management Staff</h1>
+      <p class="text-muted">Register a new mentor or coach to a franchise.</p>
+    </div>
+
+    <div class="glass-card p-4 p-md-5">
+      <form method="POST" enctype="multipart/form-data">
+        <div class="row g-4">
+          <!-- Left: Photo Upload -->
+          <div class="col-lg-4 text-center border-end border-white-10">
+            <div class="mb-4">
+              <label class="form-label d-block fw-bold text-uppercase tracking-wider small">Profile Photo</label>
+              <div class="staff-photo-preview mx-auto mb-3">
+                <i class="bi bi-person-bounding-box"></i>
+              </div>
+              <input type="file" name="photo" class="form-control form-control-sm bg-dark border-secondary text-light">
+              <small class="text-muted d-block mt-2">Recommended: Square 400x400px</small>
+            </div>
+          </div>
+
+          <!-- Right: Details -->
+          <div class="col-lg-8">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label fw-medium">Full Name <span class="text-danger">*</span></label>
+                <input type="text" name="name" class="form-control bg-dark border-secondary text-light" 
+                       placeholder="e.g. Gautam Gambhir" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-medium">Role / Designation <span class="text-danger">*</span></label>
+                <select name="role" class="form-select bg-dark border-secondary text-light" required>
+                  <option value="">-- Select Role --</option>
+                  <option value="Head Coach">Head Coach</option>
+                  <option value="Mentor">Mentor</option>
+                  <option value="Batting Coach">Batting Coach</option>
+                  <option value="Bowling Coach">Bowling Coach</option>
+                  <option value="Fielding Coach">Fielding Coach</option>
+                  <option value="Strategy / Analyst">Strategy / Analyst</option>
+                </select>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label fw-medium">Assign Franchise <span class="text-danger">*</span></label>
+                <select name="team_id" class="form-select bg-dark border-secondary text-light" required>
+                  <option value="">-- Select Team --</option>
+                  {% for t in teams %}
+                  <option value="{{ t.team_id }}">{{ t.team_name }} ({{ t.team_short_name }})</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label fw-medium text-success">Salary (in ₹ Crores) <span class="text-danger">*</span></label>
+                <div class="input-group">
+                  <span class="input-group-text bg-dark border-secondary text-success fw-bold">₹</span>
+                  <input type="number" step="0.01" name="salary" class="form-control bg-dark border-secondary text-light" 
+                         placeholder="e.g. 5.50" required>
+                  <span class="input-group-text bg-dark border-secondary text-light">Cr</span>
+                </div>
+                <small class="text-muted">This will be deducted from the Team's Mgmt Purse.</small>
+              </div>
+            </div>
+
+            <div class="mt-5 pt-4 border-top border-white-10 d-flex gap-3">
+              <button type="submit" class="btn btn-warning px-5 fw-bold py-2 shadow">
+                <i class="bi bi-check-circle-fill me-2"></i>SAVE STAFF PROFILE
+              </button>
+              <a href="{{ url_for('admin_mentors.list_mentors') }}" class="btn btn-outline-secondary px-4 fw-bold">CANCEL</a>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </main>
+</div>
+
+<style>
+  .staff-photo-preview {
+    width: 200px; height: 200px;
+    background: rgba(255,255,255,0.02);
+    border: 2px dashed rgba(255,255,255,0.1);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4rem;
+    color: rgba(255,255,255,0.05);
+  }
+  .border-white-10 { border-color: rgba(255,255,255,0.1) !important; }
+</style>
+{% endblock %}

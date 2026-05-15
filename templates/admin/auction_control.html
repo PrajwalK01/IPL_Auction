@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% block title %}Auction Control Panel — Admin{% endblock %}
+
+{% block navbar %}
+<nav class="navbar navbar-dark dashboard-navbar px-3 py-2 shadow-sm navbar-expand-lg">
+  <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="{{ url_for('dashboard.index') }}">
+    <span class="navbar-logo-icon"><i class="bi bi-hammer"></i></span>
+    <span>AUCTION <span class="text-warning">CONTROL</span></span>
+  </a>
+  <div class="ms-auto d-flex gap-2">
+    <a href="{{ url_for('dashboard.index') }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Dashboard</a>
+    <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-outline-danger">Logout</a>
+  </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+  <aside class="dashboard-sidebar">
+    <div class="sidebar-section-label">AUCTION MODES</div>
+    <ul class="sidebar-nav list-unstyled">
+      <li><a href="#" class="sidebar-link active"><i class="bi bi-play-circle-fill"></i><span>Live Console</span></a></li>
+      <li><a href="{{ url_for('admin_players.list_players') }}" class="sidebar-link"><i class="bi bi-people-fill"></i><span>Manage Players</span></a></li>
+    </ul>
+    
+    <div class="mt-4 p-3 glass-card border-warning">
+        <small class="text-muted d-block mb-1">LIVE PREVIEW</small>
+        <a href="{{ url_for('auction.live_view') }}" target="_blank" class="btn btn-sm btn-warning w-100 fw-bold">Open Public Screen <i class="bi bi-box-arrow-up-right ms-1"></i></a>
+    </div>
+  </aside>
+
+  <main class="dashboard-main">
+    <div class="row g-4">
+        <!-- Status Header -->
+        <div class="col-12">
+            <div class="glass-card p-4 d-flex align-items-center justify-content-between">
+                <div>
+                    <h1 class="page-title mb-1"><i class="bi bi-broadcast text-danger me-2"></i>Auction Command Center</h1>
+                    <p class="text-muted mb-0">Push players to the big screen and manage live bidding state.</p>
+                </div>
+                <div class="text-end">
+                    <span class="badge bg-{{ 'success' if state.status == 'bidding' else 'secondary' }} fs-6 px-4 py-2">
+                        Status: {{ state.status|upper }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Current Active Player Section -->
+        {% if state.status == 'bidding' %}
+        <div class="col-12">
+            <div class="card border-0 shadow animate-glow-pulse" style="background:var(--grad-dark); border: 2px solid var(--ipl-gold)!important; border-radius: var(--radius-lg);">
+                <div class="card-body p-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center gap-4">
+                                <div class="fs-1 text-warning"><i class="bi bi-lightning-fill"></i></div>
+                                <div>
+                                    <h3 class="text-white mb-0">NOW ON SCREEN: <span class="text-warning">{{ state.player_id }}</span></h3>
+                                    <div class="fs-2 text-white">CURRENT BID: <span class="text-warning fw-900">₹{{ state.current_bid }}Cr</span></div>
+                                    <div class="text-white-50">Last Bidder: <span class="text-info fw-bold">{{ state.bidder_id or 'NONE' }}</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <div class="d-flex flex-wrap justify-content-end gap-2 mb-3">
+                                <form method="POST" action="{{ url_for('auction.increment_bid') }}">
+                                    <input type="hidden" name="amount" value="0.20">
+                                    <button class="btn btn-outline-info fw-bold">+20 LAKH</button>
+                                </form>
+                                <form method="POST" action="{{ url_for('auction.increment_bid') }}">
+                                    <input type="hidden" name="amount" value="0.50">
+                                    <button class="btn btn-outline-info fw-bold">+50 LAKH</button>
+                                </form>
+                                <form method="POST" action="{{ url_for('auction.increment_bid') }}">
+                                    <input type="hidden" name="amount" value="1.00">
+                                    <button class="btn btn-outline-info fw-bold">+1 CRORE</button>
+                                </form>
+                            </div>
+                            <div class="d-flex justify-content-end gap-3">
+                                <form method="POST" action="{{ url_for('auction.sell_player') }}">
+                                    <button type="submit" class="btn btn-success btn-lg px-5 fw-bold" {% if not state.bidder_id %}disabled{% endif %}>
+                                        <i class="bi bi-hammer me-2"></i>SOLD
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ url_for('auction.reset_auction') }}">
+                                    <button type="submit" class="btn btn-outline-danger btn-lg px-4 fw-bold">
+                                        <i class="bi bi-x-circle me-2"></i>UNSOLD / RESET
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>setTimeout(() => { location.reload(); }, 3000);</script>
+        {% endif %}
+
+        <!-- Available Players List -->
+        <div class="col-12">
+            <div class="glass-card">
+                <div class="card-header py-3">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-list-ul me-2 text-info"></i>Select Player for Bidding</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="ps-4">ID</th>
+                                    <th>Player</th>
+                                    <th>Role</th>
+                                    <th>Base Price</th>
+                                    <th>Stats (M/SR/Eco)</th>
+                                    <th class="text-end pe-4">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for p in players %}
+                                <tr>
+                                    <td class="ps-4"><span class="badge bg-secondary">{{ p.player_id }}</span></td>
+                                    <td>
+                                        <div class="fw-bold">{{ p.player_name }}</div>
+                                        <small class="text-muted">{{ p.nationality }}</small>
+                                    </td>
+                                    <td><span class="badge role-badge-{{ p.role|replace(' ','_')|replace('-','_')|lower }}">{{ p.role }}</span></td>
+                                    <td><span class="text-warning fw-bold">₹{{ p.base_price }}Cr</span></td>
+                                    <td>
+                                        <span class="badge bg-dark border border-info me-1">{{ p.matches or 0 }} M</span>
+                                        <span class="badge bg-dark border border-warning me-1">{{ p.strike_rate or 0 }} SR</span>
+                                        <span class="badge bg-dark border border-success">{{ p.economy or 0 }} EC</span>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <form method="POST" action="{{ url_for('auction.start_player', pid=p.player_id) }}">
+                                            <button type="submit" class="btn btn-sm btn-primary fw-bold" {% if state.status == 'bidding' %}disabled{% endif %}>
+                                                <i class="bi bi-play-fill me-1"></i>GO LIVE
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+  </main>
+</div>
+
+<style>
+    .animate-glow-pulse { animation: glowPulse 2s ease-in-out infinite; }
+    @keyframes glowPulse {
+        0%, 100% { border-color: var(--ipl-gold); box-shadow: 0 0 10px rgba(251, 191, 36, 0.2); }
+        50% { border-color: #fff; box-shadow: 0 0 30px rgba(251, 191, 36, 0.4); }
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,21 @@
+# Firebase Credentials
+*.json
+!package.json
+!composer.json
+
+# Python environment
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+
+# Static Uploads (Optional: usually ignored in production)
+static/uploads/mentors/*
+static/uploads/players/*
+static/uploads/logos/*
+
+# Flask / OS files
+instance/
+.pytest_cache/
+.DS_Store

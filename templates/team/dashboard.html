@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+{% block title %}Team Dashboard — {{ team.team_short_name }}{% endblock %}
+
+{% block navbar %}
+<nav class="navbar navbar-expand-lg navbar-dark dashboard-navbar px-3 shadow">
+  <div class="container-fluid">
+    <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="{{ url_for('team.dashboard') }}">
+      {% if team.team_logo %}
+        <img src="{{ url_for('static', filename='uploads/logos/'+team.team_logo) }}" width="40" height="40" class="rounded-circle border border-2 border-warning" style="object-fit:cover;">
+      {% else %}
+        <div class="navbar-logo-icon"><i class="bi bi-shield-fill"></i></div>
+      {% endif %}
+      <span class="fs-4 tracking-tight">{{ team.team_short_name }} <span class="text-warning">PORTAL</span></span>
+    </a>
+    
+    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navMain">
+      <ul class="navbar-nav ms-auto align-items-center gap-3">
+        <li class="nav-item">
+          <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold">
+            <i class="bi bi-shield-check me-1"></i>TEAM OWNER
+          </span>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle d-flex align-items-center gap-2 px-3 glass-card py-2" href="#" data-bs-toggle="dropdown">
+            <div class="user-avatar-sm">{{ team.team_short_name[:2]|upper }}</div>
+            <span class="fw-semibold text-white">{{ team.username }}</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark glass-card border-0 shadow-lg mt-2">
+            <li><a class="dropdown-item py-2" href="{{ url_for('team.dashboard') }}"><i class="bi bi-grid-fill me-2"></i>Dashboard</a></li>
+            <li><hr class="dropdown-divider opacity-10"></li>
+            <li><a class="dropdown-item text-danger py-2" href="{{ url_for('auth.logout') }}"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+  <aside class="dashboard-sidebar animate-fade-in">
+    <div class="sidebar-section-label">TEAM CONSOLE</div>
+    <ul class="sidebar-nav list-unstyled">
+      <li><a href="{{ url_for('team.dashboard') }}" class="sidebar-link active"><i class="bi bi-grid-1x2-fill"></i><span>Overview</span></a></li>
+      <li><a href="{{ url_for('team.squad') }}" class="sidebar-link"><i class="bi bi-people-fill"></i><span>My Squad</span></a></li>
+      <li><a href="{{ url_for('team.history') }}" class="sidebar-link"><i class="bi bi-clock-history"></i><span>Bid History</span></a></li>
+    </ul>
+
+    <div class="mt-auto pt-4">
+      <div class="glass-card p-3 text-center">
+        <small class="text-muted d-block mb-2">Live Status</small>
+        <span class="badge bg-success-subtle text-success w-100 py-2">
+          <i class="bi bi-circle-fill me-2 blink fs-xs"></i>Auction Online
+        </span>
+      </div>
+    </div>
+  </aside>
+
+  <main class="dashboard-main animate-fade-in" style="animation-delay: 0.1s;">
+    <header class="page-header d-flex align-items-center gap-4 mb-5">
+      {% if team.team_logo %}
+      <div class="position-relative">
+        <img src="{{ url_for('static', filename='uploads/logos/'+team.team_logo) }}" width="100" height="100" class="rounded-circle shadow-lg border border-4 border-warning animate-pulse-slow" style="object-fit:cover;">
+        <div class="position-absolute bottom-0 end-0 bg-success border border-4 border-dark rounded-circle" style="width:24px;height:24px;"></div>
+      </div>
+      {% else %}
+      <div class="user-avatar-lg">{{ team.team_short_name }}</div>
+      {% endif %}
+      <div>
+        <h1 class="display-4 fw-800 mb-1 text-white">{{ team.team_name }}</h1>
+        <div class="d-flex align-items-center gap-3">
+          <span class="text-muted fs-5"><i class="bi bi-geo-alt-fill me-1 text-warning"></i>{{ team.home_ground or 'Home Stadium' }}</span>
+          <span class="text-white-50">|</span>
+          <span class="badge bg-warning-subtle text-warning px-3 py-1">IPL 2026 Season</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- LIVE BIDDING SECTION (Dynamic) -->
+    <div id="liveAuctionContainer" class="mb-5 animate-slide-up" style="display:none;">
+        <div class="glass-card p-5 border-warning border-4 shadow-lg" style="background: linear-gradient(135deg, rgba(251, 191, 36, 0.1), transparent);">
+            <div class="row align-items-center">
+                <div class="col-md-2 text-center d-none d-md-block">
+                    <div class="display-1 text-warning animate-pulse-slow"><i class="bi bi-hammer"></i></div>
+                </div>
+                <div class="col-md-5">
+                    <h2 class="text-white fw-800 mb-1">LIVE AUCTION IN PROGRESS</h2>
+                    <p class="text-muted fs-5 mb-0" id="livePlayerName">Fetching active player...</p>
+                    <div class="mt-3">
+                        <span class="text-white-50">Current Bid:</span>
+                        <div class="display-3 fw-900 text-white" id="liveCurrentBid">₹0.00Cr</div>
+                        <div class="text-info fw-bold" id="liveLastBidder">Last Bidder: None</div>
+                    </div>
+                </div>
+                <div class="col-md-5 text-center text-md-end mt-4 mt-md-0">
+                    <button id="bidBtn" class="btn btn-warning btn-lg px-5 py-3 fw-900 fs-3 shadow-lg hover-scale" onclick="placeBid()">
+                        <i class="bi bi-lightning-charge-fill me-2"></i>BID NOW (+10L)
+                    </button>
+                    <div class="mt-2 text-muted small">Remaining Purse: <span class="text-success fw-bold">₹{{ "%.2f"|format(player_remaining) }}Cr</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stat Cards -->
+    <div class="row g-4 mb-5">
+      <div class="col-sm-6 col-xl-3">
+        <div class="stat-card glass-card h-100 p-4">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div class="stat-icon text-success"><i class="bi bi-person-check-fill"></i></div>
+            <span class="text-success small fw-bold">Active</span>
+          </div>
+          <div class="stat-value text-success">₹{{ "%.2f"|format(player_remaining) }}Cr</div>
+          <div class="text-muted small fw-600 text-uppercase tracking-wider">Player Purse Rem.</div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <div class="stat-card glass-card h-100 p-4">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div class="stat-icon text-info"><i class="bi bi-briefcase-fill"></i></div>
+            <span class="text-info small fw-bold">Mgmt/Mentors</span>
+          </div>
+          <div class="stat-value text-info">₹{{ "%.2f"|format(mgmt_remaining) }}Cr</div>
+          <div class="text-muted small fw-600 text-uppercase tracking-wider">Mgmt Purse Rem.</div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <div class="stat-card glass-card h-100 p-4">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div class="stat-icon text-primary"><i class="bi bi-people-fill"></i></div>
+            <span class="badge bg-primary-subtle text-primary">{{ squad_count }}</span>
+          </div>
+          <div class="stat-value">{{ squad_count }}</div>
+          <div class="text-muted small fw-600 text-uppercase tracking-wider">Squad Strength</div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <div class="stat-card glass-card h-100 p-4">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div class="stat-icon text-warning"><i class="bi bi-hammer"></i></div>
+            <span class="badge bg-warning-subtle text-warning">{{ bid_count }}</span>
+          </div>
+          <div class="stat-value">{{ bid_count }}</div>
+          <div class="text-muted small fw-600 text-uppercase tracking-wider">Bids Placed</div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- Recent Acquisitions -->
+    <div class="glass-card mb-4">
+      <div class="card-header d-flex align-items-center justify-content-between">
+        <h5 class="mb-0 fw-700"><i class="bi bi-lightning-charge-fill text-warning me-2"></i>Recent Acquisitions</h5>
+        <a href="{{ url_for('team.squad') }}" class="btn btn-sm btn-link text-warning text-decoration-none fw-bold">View Squad <i class="bi bi-arrow-right ms-1"></i></a>
+      </div>
+      <div class="card-body p-0">
+        {% if recent_buys %}
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead>
+              <tr>
+                <th>Player</th>
+                <th>Role</th>
+                <th>Nationality</th>
+                <th>Price Paid</th>
+                <th class="text-end">Timestamp</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in recent_buys %}
+              <tr>
+                <td>
+                  <div class="fw-bold text-white">{{ p.player_name }}</div>
+                  <small class="text-muted">ID: {{ p.player_id }}</small>
+                </td>
+                <td><span class="badge role-badge-{{ p.role|replace(' ','_')|replace('-','_')|lower }}">{{ p.role }}</span></td>
+                <td>{{ p.nationality }}</td>
+                <td><strong class="text-success fs-5">₹{{ p.final_price }}Cr</strong></td>
+                <td class="text-end text-muted small">{{ p.sold_at.strftime('%d %b, %I:%M %p') }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5 opacity-50">
+          <i class="bi bi-cart-x fs-1 d-block mb-2"></i>
+          <p>No players acquired yet. Your bidding history will appear here.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </main>
+</div>
+
+<style>
+  .user-avatar-sm {
+    width: 32px; height: 32px;
+    background: var(--grad-primary);
+    color: #000;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.8rem;
+  }
+  .user-avatar-lg {
+    width: 100px; height: 100px;
+    background: var(--grad-primary);
+    color: #000;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 2.5rem;
+    border: 4px solid var(--ipl-gold);
+  }
+  .fw-800 { font-weight: 800; }
+  .fw-700 { font-weight: 700; }
+  .tracking-tight { letter-spacing: -1px; }
+  .tracking-wider { letter-spacing: 1px; }
+  
+  @keyframes pulse-slow {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(251, 191, 36, 0.2); }
+    50% { transform: scale(1.02); box-shadow: 0 0 40px rgba(251, 191, 36, 0.4); }
+  }
+  .animate-pulse-slow { animation: pulse-slow 4s ease-in-out infinite; }
+</style>
+
+<script>
+    async function checkAuctionState() {
+        try {
+            const resJson = await fetch("/auction/api/state");
+            const data = await resJson.json();
+            
+            const container = document.getElementById('liveAuctionContainer');
+            if (data.status === 'bidding') {
+                container.style.display = 'block';
+                document.getElementById('livePlayerName').innerText = data.player_name;
+                document.getElementById('liveCurrentBid').innerText = "₹" + data.current_bid + "Cr";
+                document.getElementById('liveLastBidder').innerText = "Last Bidder: " + (data.bidder_id || "None");
+                
+                // Disable button if you are the last bidder
+                const myTeamId = "{{ session.get('team_id_str') }}";
+                const btn = document.getElementById('bidBtn');
+                if (data.bidder_id === myTeamId) {
+                    btn.disabled = true;
+                    btn.innerText = "YOU ARE HIGHEST";
+                    btn.classList.replace('btn-warning', 'btn-success');
+                } else {
+                    btn.disabled = false;
+                    btn.innerText = "BID NOW (+10L)";
+                    btn.classList.replace('btn-success', 'btn-warning');
+                }
+            } else {
+                container.style.display = 'none';
+            }
+        } catch (e) { console.error("Poll error", e); }
+    }
+
+    async function placeBid() {
+        const btn = document.getElementById('bidBtn');
+        if (btn.disabled) return;
+        
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> BIDDING...';
+        
+        try {
+            const res = await fetch("{{ url_for('auction.team_bid') }}", { method: 'POST' });
+            const data = await res.json();
+            if (!data.success) {
+                alert(data.error);
+            }
+        } catch (e) { alert("Bid failed. Check connection."); }
+        finally { checkAuctionState(); }
+    }
+
+    // Poll every 2 seconds
+    setInterval(checkAuctionState, 2000);
+    checkAuctionState();
+</script>
+{% endblock %}

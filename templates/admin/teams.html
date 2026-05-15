@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Teams — Admin{% endblock %}
+{% block navbar %}
+<nav class="navbar navbar-dark dashboard-navbar px-3 py-2 shadow-sm navbar-expand-lg">
+  <button class="navbar-toggler border-0 me-2 d-lg-none" type="button" onclick="document.querySelector('.dashboard-sidebar').classList.toggle('open')">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="{{ url_for('dashboard.index') }}">
+    <span class="navbar-logo-icon"><i class="bi bi-cricket"></i></span>
+    <span>IPL <span class="text-warning">AUCTION</span></span>
+  </a>
+  <div class="ms-auto d-flex align-items-center gap-3">
+    <a href="{{ url_for('dashboard.index') }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Dashboard</a>
+    <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-outline-danger">Logout</a>
+  </div>
+</nav>
+{% endblock %}
+{% block content %}
+<div class="dashboard-wrapper">
+  <aside class="dashboard-sidebar">
+    <div class="sidebar-section-label">ADMIN MENU</div>
+    <ul class="sidebar-nav list-unstyled mb-0">
+      <li><a href="{{ url_for('dashboard.index') }}" class="sidebar-link"><i class="bi bi-grid-1x2-fill"></i><span>Dashboard</span></a></li>
+      <li><a href="{{ url_for('auction.controller') }}" class="sidebar-link text-warning"><i class="bi bi-broadcast"></i><span>Live Auction</span></a></li>
+      <li><a href="{{ url_for('admin_players.list_players') }}" class="sidebar-link"><i class="bi bi-people-fill"></i><span>Players</span></a></li>
+      <li><a href="{{ url_for('admin_teams.list_teams') }}" class="sidebar-link active"><i class="bi bi-shield-shaded"></i><span>Teams</span></a></li>
+      <li><a href="{{ url_for('admin_mentors.list_mentors') }}" class="sidebar-link"><i class="bi bi-person-workspace"></i><span>Mentors & Coaches</span></a></li>
+      <li><a href="{{ url_for('admin_teams.team_credentials') }}" class="sidebar-link"><i class="bi bi-key-fill"></i><span>Credentials</span></a></li>
+      <li><a href="{{ url_for('dashboard.security_logs') }}" class="sidebar-link"><i class="bi bi-shield-fill-exclamation"></i><span>Security Logs</span></a></li>
+    </ul>
+
+
+    <div class="sidebar-section-label mt-4">QUICK ADD</div>
+    <ul class="sidebar-nav list-unstyled">
+      <li><a href="{{ url_for('admin_players.add_player') }}" class="sidebar-link"><i class="bi bi-person-plus-fill"></i><span>Add Player</span></a></li>
+      <li><a href="{{ url_for('admin_teams.add_team') }}" class="sidebar-link"><i class="bi bi-plus-circle-fill"></i><span>Add Team</span></a></li>
+    </ul>
+  </aside>
+  <main class="dashboard-main">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <h1 class="page-title mb-0"><i class="bi bi-shield-fill text-warning me-2"></i>Teams</h1>
+      <a href="{{ url_for('admin_teams.add_team') }}" class="btn btn-warning text-dark fw-semibold"><i class="bi bi-plus-circle me-2"></i>Add Team</a>
+    </div>
+    <div class="card border-0 shadow" style="background:var(--surface-2);border-radius:var(--radius-lg)!important;">
+      <div class="card-body p-0">
+        {% if teams %}
+        <div class="table-responsive">
+          <table class="table table-dark table-hover align-middle mb-0">
+            <thead style="background:var(--surface-3);">
+              <tr>
+                <th class="ps-4">Team ID</th><th>Logo</th><th>Team Name</th><th>Short</th>
+                <th>Username</th><th>Player Purse (Rem/Total)</th><th>Mgmt Purse (Rem/Total)</th>
+                <th>Squad</th><th>Status</th><th class="pe-4">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+            {% for t in teams %}
+            <tr>
+              <td class="ps-4"><span class="badge bg-warning text-dark fs-6">{{ t.team_id }}</span></td>
+              <td>
+                {% if t.team_logo %}
+                  <img src="{{ url_for('static',filename='uploads/logos/'+t.team_logo) }}" width="40" height="40" class="rounded-circle border border-warning" style="object-fit:cover;">
+                {% else %}
+                  <div class="user-avatar-sm">{{ t.team_short_name[:2] }}</div>
+                {% endif %}
+              </td>
+              <td><strong>{{ t.team_name }}</strong><br><small class="text-muted">{{ t.owner_name or '—' }}</small></td>
+              <td><span class="badge bg-secondary">{{ t.team_short_name }}</span></td>
+              <td><code class="text-info">{{ t.username }}</code></td>
+              <td>
+                <span class="text-success fw-bold">₹{{ "%.1f"|format(t.player_remaining) }}</span>
+                <span class="text-muted small">/ {{ "%.1f"|format(t.player_purse) }}Cr</span>
+              </td>
+              <td>
+                <span class="text-info fw-bold">₹{{ "%.1f"|format(t.mgmt_remaining) }}</span>
+                <span class="text-muted small">/ {{ "%.1f"|format(t.mgmt_purse) }}Cr</span>
+              </td>
+              <td><span class="badge bg-primary-subtle text-primary">{{ t.squad_size }} players</span></td>
+              <td>{% if t.IsActive %}<span class="badge bg-success-subtle text-success">Active</span>{% else %}<span class="badge bg-danger-subtle text-danger">Inactive</span>{% endif %}</td>
+
+              <td class="pe-4">
+                <a href="{{ url_for('admin_teams.edit_team', tid=t.id) }}" class="btn btn-sm btn-outline-primary me-1"><i class="bi bi-pencil-fill"></i></a>
+                <form method="POST" action="{{ url_for('admin_teams.delete_team', tid=t.id) }}" class="d-inline" onsubmit="return confirm('Delete this team?')">
+                  <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash-fill"></i></button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5 text-muted">
+          <i class="bi bi-shield-slash" style="font-size:3rem;"></i>
+          <p class="mt-3">No teams added yet.</p>
+          <a href="{{ url_for('admin_teams.add_team') }}" class="btn btn-warning text-dark">Add First Team</a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </main>
+</div>
+{% endblock %}

@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}Mentors & Coaches — Admin{% endblock %}
+
+{% block navbar %}
+<nav class="navbar navbar-dark dashboard-navbar px-3 py-2 shadow-sm navbar-expand-lg">
+  <button class="navbar-toggler border-0 me-2 d-lg-none" type="button" onclick="document.querySelector('.dashboard-sidebar').classList.toggle('open')">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="{{ url_for('dashboard.index') }}">
+    <span class="navbar-logo-icon"><i class="bi bi-cricket"></i></span>
+    <span>IPL <span class="text-warning">AUCTION</span></span>
+  </a>
+  <div class="ms-auto d-flex gap-2">
+    <a href="{{ url_for('dashboard.index') }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Dashboard</a>
+    <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-outline-danger">Logout</a>
+  </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+  <aside class="dashboard-sidebar">
+    <div class="sidebar-section-label">ADMIN MENU</div>
+    <ul class="sidebar-nav list-unstyled mb-0">
+      <li><a href="{{ url_for('dashboard.index') }}" class="sidebar-link"><i class="bi bi-grid-1x2-fill"></i><span>Dashboard</span></a></li>
+      <li><a href="{{ url_for('auction.controller') }}" class="sidebar-link text-warning"><i class="bi bi-broadcast"></i><span>Live Auction</span></a></li>
+      <li><a href="{{ url_for('admin_players.list_players') }}" class="sidebar-link"><i class="bi bi-people-fill"></i><span>Players</span></a></li>
+      <li><a href="{{ url_for('admin_teams.list_teams') }}" class="sidebar-link"><i class="bi bi-shield-shaded"></i><span>Teams</span></a></li>
+      <li><a href="{{ url_for('admin_mentors.list_mentors') }}" class="sidebar-link active"><i class="bi bi-person-workspace"></i><span>Mentors & Coaches</span></a></li>
+    </ul>
+    
+    <div class="mt-4 pt-4 border-top border-white-10">
+        <a href="{{ url_for('admin_mentors.add_mentor') }}" class="btn btn-warning w-100 fw-bold py-2 shadow-sm">
+            <i class="bi bi-plus-circle-fill me-2"></i>ADD NEW STAFF
+        </a>
+    </div>
+  </aside>
+
+  <main class="dashboard-main animate-fade-in">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <div>
+        <h1 class="page-title mb-0">Mentors & Coaches</h1>
+        <p class="text-muted mb-0">Manage franchise management staff and coaching units.</p>
+      </div>
+      <a href="{{ url_for('admin_mentors.add_mentor') }}" class="btn btn-warning fw-bold px-4 py-2 shadow-sm d-none d-md-block">
+        <i class="bi bi-person-plus-fill me-2"></i>ADD MANAGEMENT STAFF
+      </a>
+    </div>
+
+    <div class="glass-card overflow-hidden">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th class="ps-4">Photo</th>
+              <th>Name & ID</th>
+              <th>Role</th>
+              <th>Franchise</th>
+              <th>Salary</th>
+              <th class="text-end pe-4">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for m in mentors %}
+            <tr>
+              <td class="ps-4">
+                {% if m.photo %}
+                  <img src="{{ url_for('static', filename='uploads/mentors/'+m.photo) }}" width="48" height="48" class="rounded-circle border border-2 border-warning shadow-sm">
+                {% else %}
+                  <div class="staff-avatar-placeholder"><i class="bi bi-person-fill"></i></div>
+                {% endif %}
+              </td>
+              <td>
+                <div class="fw-bold text-white fs-5">{{ m.name }}</div>
+                <small class="text-muted fw-bold">{{ m.mentor_id }}</small>
+              </td>
+              <td><span class="badge bg-info-subtle text-info border border-info-subtle">{{ m.role }}</span></td>
+              <td>
+                {% if m.team_name %}
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="fw-semibold text-warning">{{ m.team_short_name }}</span>
+                    <small class="text-muted d-none d-md-inline">{{ m.team_name }}</small>
+                  </div>
+                {% else %}
+                  <span class="text-muted italic">Unassigned</span>
+                {% endif %}
+              </td>
+              <td><span class="fw-bold text-success">₹{{ m.salary }}Cr</span></td>
+              <td class="text-end pe-4">
+                <div class="d-flex justify-content-end gap-2">
+                  <form method="POST" action="{{ url_for('admin_mentors.delete_mentor', mid=m.mentor_id) }}" onsubmit="return confirm('Remove this mentor?');">
+                    <button type="submit" class="btn btn-sm btn-outline-danger btn-icon-only"><i class="bi bi-trash3"></i></button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="6" class="text-center py-5 text-muted">
+                <i class="bi bi-person-slash fs-1 d-block mb-3 opacity-25"></i>
+                No management staff found. Start by adding one!
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<style>
+  .staff-avatar-placeholder {
+    width: 48px; height: 48px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: rgba(255,255,255,0.1);
+  }
+  .btn-icon-only { width: 34px; height: 34px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 8px; }
+  .border-white-10 { border-color: rgba(255,255,255,0.1) !important; }
+</style>
+{% endblock %}

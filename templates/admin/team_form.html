@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block title %}{{ action }} Team — Admin{% endblock %}
+{% block navbar %}
+<nav class="navbar navbar-dark dashboard-navbar px-3 py-2 shadow-sm navbar-expand-lg">
+  <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="{{ url_for('dashboard.index') }}">
+    <span class="navbar-logo-icon"><i class="bi bi-cricket"></i></span>
+    <span>IPL <span class="text-warning">Auction</span></span>
+  </a>
+  <div class="ms-auto d-flex gap-2">
+    <a href="{{ url_for('admin_teams.list_teams') }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Back to Teams</a>
+    <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-outline-danger">Logout</a>
+  </div>
+</nav>
+{% endblock %}
+{% block content %}
+<div class="dashboard-wrapper">
+  <aside class="dashboard-sidebar">
+    <div class="sidebar-section-label">ADMIN MENU</div>
+    <ul class="sidebar-nav list-unstyled mb-0">
+      <li><a href="{{ url_for('dashboard.index') }}" class="sidebar-link"><i class="bi bi-grid-1x2-fill"></i><span>Dashboard</span></a></li>
+      <li><a href="{{ url_for('admin_players.list_players') }}" class="sidebar-link"><i class="bi bi-people-fill"></i><span>Players</span></a></li>
+      <li><a href="{{ url_for('admin_teams.list_teams') }}" class="sidebar-link active"><i class="bi bi-shield-shaded"></i><span>Teams</span></a></li>
+      <li><a href="{{ url_for('admin_teams.team_credentials') }}" class="sidebar-link"><i class="bi bi-key-fill"></i><span>Credentials</span></a></li>
+    </ul>
+
+  </aside>
+  <main class="dashboard-main">
+    <div class="row justify-content-center">
+      <div class="col-12 col-lg-8 col-xl-7">
+        <h1 class="page-title mb-4"><i class="bi bi-shield-fill text-warning me-2"></i>{{ action }} Team</h1>
+        <div class="card border-0 shadow" style="background:var(--surface-2);border-radius:var(--radius-lg)!important;">
+          <div class="card-body p-4">
+            <form method="POST" enctype="multipart/form-data">
+
+              {% if team %}
+              <div class="mb-3">
+                <label class="form-label fw-medium text-muted">Team ID</label>
+                <input type="text" class="form-control bg-dark border-secondary text-warning fw-bold" value="{{ team.team_id }}" readonly>
+              </div>
+              {% endif %}
+
+              <div class="row g-3 mb-3">
+                <div class="col-md-8">
+                  <label class="form-label fw-medium">Team Name <span class="text-danger">*</span></label>
+                  <input type="text" name="team_name" class="form-control bg-dark border-secondary text-light"
+                         placeholder="e.g. Mumbai Indians" value="{{ team.team_name if team else '' }}" required>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label fw-medium">Short Name <span class="text-danger">*</span></label>
+                  <input type="text" name="team_short_name" class="form-control bg-dark border-secondary text-light"
+                         placeholder="MI" maxlength="5" value="{{ team.team_short_name if team else '' }}" required>
+                </div>
+              </div>
+
+              <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                  <label class="form-label fw-medium">Owner Name</label>
+                  <input type="text" name="owner_name" class="form-control bg-dark border-secondary text-light"
+                         placeholder="Owner full name" value="{{ team.owner_name or '' if team else '' }}">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-medium">Home Ground</label>
+                  <input type="text" name="home_ground" class="form-control bg-dark border-secondary text-light"
+                         placeholder="Wankhede Stadium" value="{{ team.home_ground or '' if team else '' }}">
+                </div>
+              </div>
+
+              <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                  <label class="form-label fw-medium">Login Username <span class="text-danger">*</span></label>
+                  <input type="text" name="username" class="form-control bg-dark border-secondary text-light"
+                         placeholder="mi_team" value="{{ team.username if team else '' }}" {% if team %}readonly{% else %}required{% endif %}>
+                  {% if team %}<small class="text-muted">Username cannot be changed after creation.</small>{% endif %}
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-medium">Password {% if not team %}<span class="text-danger">*</span>{% endif %}</label>
+                  <input type="password" name="password" class="form-control bg-dark border-secondary text-light"
+                         placeholder="{% if team %}Leave blank to keep current{% else %}Set login password{% endif %}"
+                         {% if not team %}required{% endif %}>
+                </div>
+              </div>
+
+              <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                  <label class="form-label fw-medium">Player Purse (Crores) <span class="text-danger">*</span></label>
+                  <div class="input-group">
+                    <span class="input-group-text bg-dark border-secondary text-success">₹</span>
+                    <input type="number" name="player_purse" step="0.01" min="0"
+                           class="form-control bg-dark border-secondary text-light"
+                           placeholder="80.00" value="{{ team.player_purse if team else '80.00' }}" required>
+                    <span class="input-group-text bg-dark border-secondary text-muted">Cr</span>
+                  </div>
+                  <small class="text-muted">Budget for buying players.</small>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-medium">Mgmt & Mentors Purse (Crores) <span class="text-danger">*</span></label>
+                  <div class="input-group">
+                    <span class="input-group-text bg-dark border-secondary text-info">₹</span>
+                    <input type="number" name="mgmt_purse" step="0.01" min="0"
+                           class="form-control bg-dark border-secondary text-light"
+                           placeholder="20.00" value="{{ team.mgmt_purse if team else '20.00' }}" required>
+                    <span class="input-group-text bg-dark border-secondary text-muted">Cr</span>
+                  </div>
+                  <small class="text-muted">Budget for Teams + Mentors.</small>
+                </div>
+              </div>
+
+              <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                  <label class="form-label fw-medium">Team Logo</label>
+                  <input type="file" name="team_logo" class="form-control bg-dark border-secondary text-light" accept="image/*">
+                  {% if team and team.team_logo %}
+                  <div class="mt-2 d-flex align-items-center gap-2">
+                    <img src="{{ url_for('static',filename='uploads/logos/'+team.team_logo) }}" width="40" height="40" class="rounded-circle border border-warning" style="object-fit:cover;">
+                    <small class="text-muted">Current logo</small>
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+
+
+              {% if team %}
+              <div class="mb-3">
+                <label class="form-label fw-medium">Status</label>
+                <select name="IsActive" class="form-select bg-dark border-secondary text-light">
+                  <option value="1" {% if team.IsActive %}selected{% endif %}>Active</option>
+                  <option value="0" {% if not team.IsActive %}selected{% endif %}>Inactive</option>
+                </select>
+              </div>
+              {% endif %}
+
+              <div class="d-flex gap-3 mt-4">
+                <button type="submit" class="btn btn-warning text-dark fw-semibold px-4">
+                  <i class="bi bi-check-circle-fill me-2"></i>{{ action }} Team
+                </button>
+                <a href="{{ url_for('admin_teams.list_teams') }}" class="btn btn-outline-secondary px-4">Cancel</a>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+{% endblock %}
