@@ -223,16 +223,37 @@ def import_players():
         # Required columns mapping (Case insensitive)
         df.columns = [c.strip().lower().replace(" ", "_") for c in df.columns]
         
+        def safe_float(val, default=0.0):
+            try:
+                if not val or str(val).strip() in ["-", "", "nan", "None"]:
+                    return default
+                return float(val)
+            except:
+                return default
+
+        def safe_int(val, default=0):
+            try:
+                if not val or str(val).strip() in ["-", "", "nan", "None"]:
+                    return default
+                return int(float(val)) # float then int handles "10.0"
+            except:
+                return default
+
         for _, row in df.iterrows():
-            name = str(row.get("name", "")).strip()
-            if not name: continue
+            # Flexible Name detection
+            name = str(row.get("name") or row.get("player_name") or row.get("full_name") or "").strip()
+            if not name or name.lower() == "nan": continue
             
-            role = str(row.get("role", "Batsman")).strip()
+            # Flexible Role detection
+            role = str(row.get("role") or row.get("player_role") or row.get("type") or "Batsman").strip()
+            if role.lower() == "nan": role = "Batsman"
+            
             # Generate ID based on role
             pid = generate_player_id(role)
             
-            # Cap base price at 2.0 Cr as requested
-            base_price = float(row.get("base_price", 0.20))
+            # Flexible Price detection
+            base_price = safe_float(row.get("base_price") or row.get("price") or row.get("cost") or row.get("base_value"), 0.20)
+
             if base_price > 2.0:
                 base_price = 2.0
                 
@@ -240,16 +261,16 @@ def import_players():
                 "player_id": pid,
                 "player_name": name,
                 "role": role,
-                "nationality": str(row.get("nationality", "Indian")),
-                "age": int(row.get("age", 25)),
-                "batting_style": str(row.get("batting_style", "Right-Hand")),
-                "bowling_style": str(row.get("bowling_style", "N/A")),
-                "player_type": str(row.get("player_type", "Uncapped")),
+                "nationality": str(row.get("nationality") or row.get("country") or "Indian"),
+                "age": safe_int(row.get("age"), 25),
+                "batting_style": str(row.get("batting_style") or row.get("batting") or "Right-Hand"),
+                "bowling_style": str(row.get("bowling_style") or row.get("bowling") or "N/A"),
+                "player_type": str(row.get("player_type") or "Uncapped"),
                 "capped": 1 if str(row.get("player_type", "")).lower() == "capped" else 0,
                 "base_price": base_price,
-                "matches": int(row.get("matches", 0)),
-                "strike_rate": float(row.get("strike_rate", 0)),
-                "economy": float(row.get("economy", 0)),
+                "matches": safe_int(row.get("matches") or row.get("m"), 0),
+                "strike_rate": safe_float(row.get("strike_rate") or row.get("sr"), 0.0),
+                "economy": safe_float(row.get("economy") or row.get("eco"), 0.0),
                 "photo": None,
                 "is_sold": 0,
                 "sold_to_team_id": None,
@@ -260,8 +281,11 @@ def import_players():
             
             db.collection("players").document(pid).set(data)
             count += 1
-            
-        flash(f"Successfully imported {count} players! 🚀", "success")
+        
+        if count == 0:
+            flash("Import finished, but 0 players were found. Please check your column headers (Name, Role, Base Price).", "warning")
+        else:
+            flash(f"Successfully imported {count} players! 🚀", "success")
     except Exception as e:
         flash(f"Import failed: {str(e)}", "danger")
         
