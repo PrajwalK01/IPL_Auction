@@ -12,7 +12,23 @@ import config
 # Initialize Firebase
 def init_firebase():
     if not firebase_admin._apps:
-        # Look for key in root directory
+        # 1. Try environment variable (for Vercel/Production)
+        import json
+        firebase_env = os.environ.get("FIREBASE_CREDENTIALS")
+        
+        if firebase_env:
+            try:
+                cred_dict = json.loads(firebase_env)
+                cred = credentials.Certificate(cred_dict)
+                firebase_admin.initialize_app(cred, {
+                    'storageBucket': config.FIREBASE_STORAGE_BUCKET
+                })
+                print("[OK] Firebase Initialized via Environment Variable.")
+                return
+            except Exception as e:
+                print(f"[FAIL] Failed to init Firebase via env: {e}")
+
+        # 2. Try local file (for Local Development)
         key_path = os.path.join(os.path.dirname(__file__), "..", "firebase-key.json")
         
         if os.path.exists(key_path):
@@ -20,16 +36,9 @@ def init_firebase():
             firebase_admin.initialize_app(cred, {
                 'storageBucket': config.FIREBASE_STORAGE_BUCKET
             })
-            print("[OK] Firebase Initialized with service account.")
+            print("[OK] Firebase Initialized with local service account.")
         else:
-            # Fallback for local testing if key is missing (this will fail on actual Firestore calls)
-            print("[WARN] firebase-key.json not found in root. Firebase will fail.")
-            # Initialize with default credentials if available
-            try:
-                firebase_admin.initialize_app()
-                print("[OK] Firebase Initialized with default credentials.")
-            except:
-                print("[FAIL] Firebase initialization failed. Please add firebase-key.json")
+            print("[FAIL] No Firebase credentials found. Set FIREBASE_CREDENTIALS env or add firebase-key.json")
 
 def get_db():
     init_firebase()
