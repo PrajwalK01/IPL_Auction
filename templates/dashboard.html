@@ -4,7 +4,7 @@
 {% block navbar %}
 <nav class="navbar navbar-expand-lg navbar-dark dashboard-navbar px-3 shadow">
   <div class="container-fluid">
-    <button class="navbar-toggler border-0 me-2 d-lg-none" type="button" onclick="document.querySelector('.dashboard-sidebar').classList.toggle('open')">
+    <button class="navbar-toggler border-0 me-2 d-lg-none" type="button" onclick="toggleSidebar()">
       <span class="navbar-toggler-icon"></span>
     </button>
     <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="{{ url_for('dashboard.index') }}">
@@ -80,7 +80,7 @@
       </div>
       <div class="d-none d-md-block text-end">
         <div class="text-muted small text-uppercase fw-bold tracking-wider mb-1">Current Date</div>
-        <div class="fs-4 fw-700 text-white">{{ "May 15, 2026" }}</div>
+        <div class="fs-4 fw-700 text-white">{{ today }}</div>
       </div>
     </header>
 
@@ -130,7 +130,7 @@
 
     <div class="row g-4">
       <!-- Teams Table -->
-      <div class="col-lg-12">
+      <div class="col-lg-8">
         <div class="glass-card h-100">
           <div class="card-header d-flex align-items-center justify-content-between">
             <h5 class="mb-0 fw-700"><i class="bi bi-shield-check text-warning me-2"></i>Teams Financial Overview</h5>
@@ -146,8 +146,8 @@
                   <tr>
                     <th>Team</th>
                     <th>Player Purse (Rem/Total)</th>
-                    <th>Mgmt Purse (Rem/Total)</th>
-                    <th>Total Spent</th>
+                    <th class="d-none d-md-table-cell">Mgmt Purse (Rem/Total)</th>
+                    <th class="d-none d-lg-table-cell">Total Spent</th>
                     <th>Squad</th>
                     <th class="text-end">Status</th>
                   </tr>
@@ -158,7 +158,7 @@
                     <td>
                       <div class="d-flex align-items-center gap-3">
                         {% if t.team_logo %}
-                          <img src="{{ url_for('static',filename='uploads/logos/'+t.team_logo) }}" width="36" height="36" class="rounded-circle border border-2 border-dark shadow-sm">
+                          <img src="{{ t.team_logo or '' }}" width="36" height="36" class="rounded-circle border border-2 border-dark shadow-sm">
                         {% else %}
                           <div class="user-avatar-sm">{{ t.team_short_name[:2] }}</div>
                         {% endif %}
@@ -174,13 +174,13 @@
                         <div class="progress-bar bg-success" style="width: {{ (t.player_remaining / t.player_purse * 100)|round if t.player_purse > 0 else 0 }}%"></div>
                       </div>
                     </td>
-                    <td>
+                    <td class="d-none d-md-table-cell">
                       <div class="fw-bold text-info">₹{{ "%.1f"|format(t.mgmt_remaining) }} / {{ "%.1f"|format(t.mgmt_purse) }}Cr</div>
                       <div class="progress mt-1" style="height: 4px; background: rgba(255,255,255,0.05);">
                         <div class="progress-bar bg-info" style="width: {{ (t.mgmt_remaining / t.mgmt_purse * 100)|round if t.mgmt_purse > 0 else 0 }}%"></div>
                       </div>
                     </td>
-                    <td><span class="fw-bold">₹{{ "%.1f"|format(t.player_spent + t.mgmt_spent) }}Cr</span></td>
+                    <td class="d-none d-lg-table-cell"><span class="fw-bold">₹{{ "%.1f"|format(t.player_spent + t.mgmt_spent) }}Cr</span></td>
                     <td>
                       <div class="d-flex align-items-center gap-2">
                         <small class="fw-bold text-warning">{{ t.squad_size }}</small>
@@ -202,8 +202,6 @@
           </div>
         </div>
       </div>
-    </div>
-
 
       <!-- Recent Players -->
       <div class="col-lg-4">
@@ -265,4 +263,17 @@
   .tracking-wider { letter-spacing: 1px; }
   .border-white-5 { border-color: rgba(255,255,255,0.05) !important; }
 </style>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<script>
+function toggleSidebar() {
+  document.querySelector('.dashboard-sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('show');
+}
+function closeSidebar() {
+  document.querySelector('.dashboard-sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('show');
+}
+</script>
 {% endblock %}

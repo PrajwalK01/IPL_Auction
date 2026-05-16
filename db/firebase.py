@@ -47,3 +47,18 @@ def get_db():
 def get_bucket():
     init_firebase()
     return storage.bucket()
+
+def upload_file_to_firebase(file, folder):
+    import uuid
+    from werkzeug.utils import secure_filename
+    if not file or file.filename == "":
+        return None
+    filename = secure_filename(file.filename)
+    unique_name = f"{uuid.uuid4().hex}_{filename}"
+    path = f"{folder}/{unique_name}"
+    
+    bucket = get_bucket()
+    blob = bucket.blob(path)
+    blob.upload_from_file(file.stream, content_type=file.content_type)
+    blob.make_public()
+    return blob.public_url

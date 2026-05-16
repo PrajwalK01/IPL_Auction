@@ -27,11 +27,12 @@ def save_photo(file):
     ext = file.filename.rsplit(".", 1)[-1].lower()
     if ext not in ALLOWED:
         return None
-    upload_dir = os.path.join(current_app.root_path, "static", "uploads", "mentors")
-    os.makedirs(upload_dir, exist_ok=True)
-    filename = secure_filename(file.filename)
-    file.save(os.path.join(upload_dir, filename))
-    return filename
+    from db.firebase import upload_file_to_firebase
+    try:
+        return upload_file_to_firebase(file, "mentors")
+    except Exception as e:
+        flash(f"Upload failed: {e}", "danger")
+        return None
 
 @mentors_bp.route("/")
 @admin_required

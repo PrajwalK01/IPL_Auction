@@ -155,7 +155,7 @@
                   <input type="file" name="photo" class="form-control bg-dark border-secondary text-light" accept="image/*">
                   {% if player and player.photo %}
                   <div class="mt-2 d-flex align-items-center gap-2">
-                    <img src="{{ url_for('static',filename='uploads/players/'+player.photo) }}" width="40" height="40" class="rounded-circle" style="object-fit:cover;">
+                    <img src="{{ player.photo or '' }}" width="40" height="40" class="rounded-circle" style="object-fit:cover;">
                     <small class="text-muted">Current photo (upload new to replace)</small>
                   </div>
                   {% endif %}

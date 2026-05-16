@@ -17,6 +17,13 @@ if os.path.exists(_env_path):
 
 SECRET_KEY  = os.environ.get("SECRET_KEY",  "ipl_auction_super_secret_2026")
 
+# DB Config
+DB_HOST     = os.environ.get("DB_HOST", "localhost")
+DB_PORT     = int(os.environ.get("DB_PORT", 3306))
+DB_USER     = os.environ.get("DB_USER", "root")
+DB_PASSWORD = os.environ.get("DB_PASSWORD", "")
+DB_NAME     = os.environ.get("DB_NAME", "ipl_auction_db")
+
 # Firebase Config
 FIREBASE_STORAGE_BUCKET = os.environ.get("FIREBASE_STORAGE_BUCKET", "ipl-auction-fbe62.appspot.com")
 

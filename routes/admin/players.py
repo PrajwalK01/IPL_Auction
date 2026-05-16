@@ -31,11 +31,12 @@ def save_photo(file):
     if ext not in ALLOWED:
         flash("Invalid file type. Use PNG, JPG or WEBP.", "warning")
         return None
-    upload_dir = os.path.join(current_app.root_path, "static", "uploads", "players")
-    os.makedirs(upload_dir, exist_ok=True)
-    filename = secure_filename(file.filename)
-    file.save(os.path.join(upload_dir, filename))
-    return filename
+    from db.firebase import upload_file_to_firebase
+    try:
+        return upload_file_to_firebase(file, "players")
+    except Exception as e:
+        flash(f"Upload failed: {e}", "danger")
+        return None
 
 
 @players_bp.route("/")

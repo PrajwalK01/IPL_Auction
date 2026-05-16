@@ -379,6 +379,14 @@ body {
     border-radius: 0;
   }
   
+  .dashboard-wrapper {
+    padding: 12px;
+    gap: 0;
+  }
+  .dashboard-main {
+    padding-left: 0;
+  }
+  
   /* Make + button much larger for fingers */
   button[onclick^="openAddModal"] {
     width: 44px;
@@ -412,3 +420,28 @@ body {
 }
 .blink { animation: blink 2s ease-in-out infinite; }
 
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 1999;
+  backdrop-filter: blur(2px);
+}
+.sidebar-overlay.show { display: block; }
+
+@media (max-width: 767.98px) {
+  .table td, .table thead th {
+    padding: 0.65rem 0.75rem;
+    font-size: 0.83rem;
+  }
+  #liveAuctionContainer .glass-card {
+    padding: 1.5rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .stat-value { font-size: 1.4rem; }
+  .stat-icon { width: 40px; height: 40px; font-size: 1.1rem; }
+  .stat-card { padding: 1rem !important; }
+}

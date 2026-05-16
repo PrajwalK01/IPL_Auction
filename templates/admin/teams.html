@@ -59,7 +59,7 @@
               <td class="ps-4"><span class="badge bg-warning text-dark fs-6">{{ t.team_id }}</span></td>
               <td>
                 {% if t.team_logo %}
-                  <img src="{{ url_for('static',filename='uploads/logos/'+t.team_logo) }}" width="40" height="40" class="rounded-circle border border-warning" style="object-fit:cover;">
+                  <img src="{{ t.team_logo or '' }}" width="40" height="40" class="rounded-circle border border-warning" style="object-fit:cover;">
                 {% else %}
                   <div class="user-avatar-sm">{{ t.team_short_name[:2] }}</div>
                 {% endif %}

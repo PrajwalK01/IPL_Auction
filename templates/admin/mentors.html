@@ -65,7 +65,7 @@
             <tr>
               <td class="ps-4">
                 {% if m.photo %}
-                  <img src="{{ url_for('static', filename='uploads/mentors/'+m.photo) }}" width="48" height="48" class="rounded-circle border border-2 border-warning shadow-sm">
+                  <img src="{{ m.photo or '' }}" width="48" height="48" class="rounded-circle border border-2 border-warning shadow-sm">
                 {% else %}
                   <div class="staff-avatar-placeholder"><i class="bi bi-person-fill"></i></div>
                 {% endif %}

@@ -5,7 +5,7 @@
 <nav class="navbar navbar-dark dashboard-navbar px-3 py-2 shadow-sm navbar-expand-lg">
   <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="{{ url_for('team.dashboard') }}">
     {% if team.team_logo %}
-      <img src="{{ url_for('static', filename='uploads/logos/'+team.team_logo) }}" width="34" height="34" class="rounded-circle" style="object-fit:cover;border:2px solid var(--ipl-orange);">
+      <img src="{{ team.team_logo or '' }}" width="34" height="34" class="rounded-circle" style="object-fit:cover;border:2px solid var(--ipl-orange);">
     {% else %}
       <span class="navbar-logo-icon"><i class="bi bi-shield-fill"></i></span>
     {% endif %}

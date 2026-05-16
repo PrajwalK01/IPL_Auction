@@ -30,11 +30,13 @@ def save_logo(file, username):
     if ext not in ALLOWED:
         flash("Invalid file type. Use PNG, JPG, GIF, WEBP or SVG.", "warning")
         return None
-    upload_dir = os.path.join(current_app.root_path, "static", "uploads", "logos")
-    os.makedirs(upload_dir, exist_ok=True)
-    filename = secure_filename(f"{username}_{file.filename}")
-    file.save(os.path.join(upload_dir, filename))
-    return filename
+    from db.firebase import upload_file_to_firebase
+    try:
+        # Pass a modified file object or just let the helper generate a uuid
+        return upload_file_to_firebase(file, "logos")
+    except Exception as e:
+        flash(f"Upload failed: {e}", "danger")
+        return None
 
 
 @teams_bp.route("/")

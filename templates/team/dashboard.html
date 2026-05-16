@@ -6,7 +6,7 @@
   <div class="container-fluid">
     <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="{{ url_for('team.dashboard') }}">
       {% if team.team_logo %}
-        <img src="{{ url_for('static', filename='uploads/logos/'+team.team_logo) }}" width="40" height="40" class="rounded-circle border border-2 border-warning" style="object-fit:cover;">
+        <img src="{{ team.team_logo or '' }}" width="40" height="40" class="rounded-circle border border-2 border-warning" style="object-fit:cover;">
       {% else %}
         <div class="navbar-logo-icon"><i class="bi bi-shield-fill"></i></div>
       {% endif %}
@@ -65,7 +65,7 @@
     <header class="page-header d-flex align-items-center gap-4 mb-5">
       {% if team.team_logo %}
       <div class="position-relative">
-        <img src="{{ url_for('static', filename='uploads/logos/'+team.team_logo) }}" width="100" height="100" class="rounded-circle shadow-lg border border-4 border-warning animate-pulse-slow" style="object-fit:cover;">
+        <img src="{{ team.team_logo or '' }}" width="100" height="100" class="rounded-circle shadow-lg border border-4 border-warning animate-pulse-slow" style="object-fit:cover;">
         <div class="position-absolute bottom-0 end-0 bg-success border border-4 border-dark rounded-circle" style="width:24px;height:24px;"></div>
       </div>
       {% else %}
@@ -93,12 +93,12 @@
                     <p class="text-muted fs-5 mb-0" id="livePlayerName">Fetching active player...</p>
                     <div class="mt-3">
                         <span class="text-white-50">Current Bid:</span>
-                        <div class="display-3 fw-900 text-white" id="liveCurrentBid">₹0.00Cr</div>
+                        <div class="fw-900 text-white" id="liveCurrentBid" style="font-size: clamp(1.8rem, 6vw, 3rem);">₹0.00Cr</div>
                         <div class="text-info fw-bold" id="liveLastBidder">Last Bidder: None</div>
                     </div>
                 </div>
                 <div class="col-md-5 text-center text-md-end mt-4 mt-md-0">
-                    <button id="bidBtn" class="btn btn-warning btn-lg px-5 py-3 fw-900 fs-3 shadow-lg hover-scale" onclick="placeBid()">
+                    <button id="bidBtn" class="btn btn-warning btn-lg px-4 px-md-5 py-3 fw-900 fs-5 fs-md-3 shadow-lg hover-scale" onclick="placeBid()">
                         <i class="bi bi-lightning-charge-fill me-2"></i>BID NOW (+10L)
                     </button>
                     <div class="mt-2 text-muted small">Remaining Purse: <span class="text-success fw-bold">₹{{ "%.2f"|format(player_remaining) }}Cr</span></div>
@@ -181,7 +181,7 @@
                 <td><span class="badge role-badge-{{ p.role|replace(' ','_')|replace('-','_')|lower }}">{{ p.role }}</span></td>
                 <td>{{ p.nationality }}</td>
                 <td><strong class="text-success fs-5">₹{{ p.final_price }}Cr</strong></td>
-                <td class="text-end text-muted small">{{ p.sold_at.strftime('%d %b, %I:%M %p') }}</td>
+                <td class="text-end text-muted small">{{ p.sold_at.strftime('%d %b, %I:%M %p') if p.sold_at else 'Just now' }}</td>
               </tr>
               {% endfor %}
             </tbody>
