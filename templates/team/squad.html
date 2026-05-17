@@ -5,9 +5,10 @@
 <nav class="navbar navbar-dark dashboard-navbar px-3 py-2 shadow-sm navbar-expand-lg">
   <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="{{ url_for('team.dashboard') }}">
     {% if team.team_logo %}
-      <img src="{{ team.team_logo or '' }}" width="34" height="34" class="rounded-circle" style="object-fit:cover;border:2px solid var(--ipl-orange);">
+      <img src="{{ team.team_logo }}" width="34" height="34" class="rounded-circle border border-warning" style="object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+      <div class="user-avatar-sm" style="display:none; width:34px; height:34px; font-size:0.7rem;">{{ team.team_short_name[:2] }}</div>
     {% else %}
-      <span class="navbar-logo-icon"><i class="bi bi-shield-fill"></i></span>
+      <div class="user-avatar-sm" style="width:34px; height:34px; font-size:0.7rem;">{{ team.team_short_name[:2] }}</div>
     {% endif %}
     <span>{{ team.team_short_name }} <span class="text-warning">Portal</span></span>
   </a>
@@ -72,7 +73,7 @@
               </td>
               <td>{{ p.nationality }}</td>
               <td>{% if p.capped %}<span class="badge bg-warning text-dark">Capped</span>{% else %}<span class="badge bg-secondary">Uncapped</span>{% endif %}</td>
-              <td><strong class="text-success fs-5">₹{{ "%.2f"|format(p.final_price) }}Cr</strong></td>
+              <td><strong class="text-success fs-5">₹{{ "%.2f"|format(p.sold_price or 0) }}Cr</strong></td>
             </tr>
             {% endfor %}
             </tbody>

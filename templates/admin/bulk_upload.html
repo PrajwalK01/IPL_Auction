@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Bulk Upload — Admin{% endblock %}
+{% block navbar %}
+{% include 'components/navbar.html' %}
+{% endblock %}
+{% block content %}
+<div class="dashboard-wrapper">
+  {% include 'components/sidebar.html' %}
+  <main class="dashboard-main animate-fade-in">
+    <div class="page-header mb-4">
+      <h1 class="display-6 fw-800 mb-1">Bulk Player Upload</h1>
+      <p class="text-muted">Upload an Excel file to add multiple players at once.</p>
+    </div>
+
+    <div class="row">
+      <div class="col-lg-6">
+        <div class="glass-card p-4">
+          <form method="POST" enctype="multipart/form-data">
+            <div class="mb-4">
+              <label class="form-label fw-bold">Select Excel File (.xlsx, .xls)</label>
+              <input type="file" name="excel_file" class="form-control bg-dark text-white border-secondary" accept=".xlsx, .xls" required>
+            </div>
+            <div class="alert alert-info bg-info-subtle border-0 small">
+              <i class="bi bi-info-circle-fill me-2"></i> Ensure your Excel file has headers like: 
+              <code>Name</code>, <code>Type</code> (Batter/Bowler/All-Rounder/WK), <code>Base Price</code>, etc.
+            </div>
+            <button type="submit" class="btn btn-warning w-100 fw-bold py-2">
+              <i class="bi bi-cloud-upload-fill me-2"></i>Start Bulk Import
+            </button>
+          </form>
+        </div>
+      </div>
+      
+      <div class="col-lg-6">
+        <div class="glass-card p-4">
+          <h5 class="fw-bold mb-3"><i class="bi bi-journal-text me-2"></i>Excel Format Guide</h5>
+          <table class="table table-dark table-sm small">
+            <thead>
+              <tr><th>Column</th><th>Required For</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Name</td><td>All</td></tr>
+              <tr><td>Type</td><td>All (Batter, Bowler, etc.)</td></tr>
+              <tr><td>Base Price</td><td>All (in Crores)</td></tr>
+              <tr><td>Status</td><td>All (Capped/Uncapped)</td></tr>
+              <tr><td>Strike Rate</td><td>Batters, All-Rounders</td></tr>
+              <tr><td>Economy</td><td>Bowlers, All-Rounders</td></tr>
+              <tr><td>Wickets</td><td>Bowlers, All-Rounders</td></tr>
+              <tr><td>Stumpings</td><td>Wicket Keepers</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<style>
+  .fw-800 { font-weight: 800; }
+  .glass-card {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 1.5rem;
+  }
+</style>
+{% endblock %}

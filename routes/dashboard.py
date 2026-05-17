@@ -1,7 +1,9 @@
-"""routes/dashboard.py — Admin dashboard with live stats."""
+"""routes/dashboard.py — Admin dashboard with live stats from all collections."""
+
 from functools import wraps
 from flask import Blueprint, render_template, session, redirect, url_for, flash
 from db.firebase import get_db
+from db.helpers import get_all_players
 
 dashboard_bp = Blueprint("dashboard", __name__)
 
@@ -22,49 +24,51 @@ def index():
     try:
         db = get_db()
 
-        # Fetch all players and teams once to avoid complex indexed queries
-        all_players = [d.to_dict() for d in db.collection("players").stream()]
-        all_teams   = [d.to_dict() for d in db.collection("teams").stream()]
+        # Fetch all players from all 4 collections
+        all_players = get_all_players()
+        all_teams = [d.to_dict() | {"id": d.id}
+                     for d in db.collection("teams").stream()]
 
-        # Filter in Python (Avoids Firebase Index errors) - Resilient to key casing
-        active_players = [p for p in all_players if (p.get("is_deleted") == 0 or p.get("IsDeleted") == False) and (p.get("is_active") == 1 or p.get("IsActive") == True)]
-        active_teams   = [t for t in all_teams if (t.get("IsDeleted") == False or t.get("is_deleted") == 0) and (t.get("IsActive") == True or t.get("is_active") == 1)]
+        # Filter active
+        active_players = [p for p in all_players
+                          if p.get("auction_status") != "unavailable"]
+        active_teams = [t for t in all_teams
+                        if not t.get("is_deleted") and t.get("is_active", True)]
 
         total_players = len(active_players)
-        total_teams   = len(active_teams)
+        total_teams = len(active_teams)
 
-        # Aggregate Purses
+        # Aggregate purses
         total_player_purse = 0
         total_mgmt_purse = 0
-        total_overall_purse = 0
         teams_list = []
-        
+
         for t in active_teams:
             p_purse = float(t.get("player_purse", 0))
             m_purse = float(t.get("mgmt_purse", 0))
             total_player_purse += p_purse
             total_mgmt_purse += m_purse
-            total_overall_purse += (p_purse + m_purse)
-            
-            # Squad size (Filter from our already fetched list)
-            squad = [p for p in all_players if p.get("sold_to_team_id") == t.get("team_id") and p.get("is_deleted") == 0]
-            t['squad_size'] = len(squad)
-            t['player_remaining'] = p_purse - float(t.get("player_spent", 0))
-            t['mgmt_remaining'] = m_purse - float(t.get("mgmt_spent", 0))
+
+            t["squad_size"] = int(t.get("squad_count", 0))
+            t["player_remaining"] = p_purse - float(t.get("player_spent", 0))
+            t["mgmt_remaining"] = m_purse - float(t.get("mgmt_spent", 0))
             teams_list.append(t)
 
-        # Total Bids
-        all_bids = [d.to_dict() for d in db.collection("bids").stream()]
-        total_bids = len([b for b in all_bids if b.get("is_deleted") == 0])
+        total_overall_purse = total_player_purse + total_mgmt_purse
 
-        # Sold Players count
-        sold_players = len([p for p in active_players if p.get("is_sold") == 1])
+        # Sold players count
+        sold_players = len([p for p in active_players
+                            if p.get("auction_status") == "sold"])
 
-        # Recent Players (Sort in Python)
+        # Auction log count
+        auction_logs = list(db.collection("auction_logs").stream())
+        total_bids = len(auction_logs)
+
+        # Recent sold players
         recent_players = sorted(
-            [p for p in all_players if p.get("is_deleted") == 0],
+            [p for p in all_players if p.get("auction_status") == "sold"],
             key=lambda x: x.get("created_at") or 0,
-            reverse=True
+            reverse=True,
         )[:8]
 
     except Exception as e:
@@ -75,17 +79,17 @@ def index():
         total_player_purse = total_mgmt_purse = total_overall_purse = 0
 
     return render_template("dashboard.html",
-        username      = session.get("username"),
-        role          = session.get("role"),
-        total_players = total_players,
-        total_teams   = total_teams,
-        total_player_purse = total_player_purse,
-        total_mgmt_purse   = total_mgmt_purse,
-        total_overall_purse = total_overall_purse,
-        total_bids    = total_bids,
-        sold_players  = sold_players,
-        teams         = teams_list,
-        recent_players= recent_players,
+        username=session.get("username"),
+        role=session.get("role"),
+        total_players=total_players,
+        total_teams=total_teams,
+        total_player_purse=total_player_purse,
+        total_mgmt_purse=total_mgmt_purse,
+        total_overall_purse=total_overall_purse,
+        total_bids=total_bids,
+        sold_players=sold_players,
+        teams=teams_list,
+        recent_players=recent_players,
     )
 
 
@@ -94,20 +98,16 @@ def index():
 def security_logs():
     try:
         db = get_db()
-        # Fetch logs and sort in Python to avoid index requirement
         logs_docs = db.collection("security_logs").stream()
         logs = []
         for doc in logs_docs:
-            l = doc.to_dict()
-            l['id'] = doc.id
-            logs.append(l)
-        
-        # Sort by created_at DESC
+            log = doc.to_dict()
+            log["id"] = doc.id
+            logs.append(log)
+
         logs.sort(key=lambda x: x.get("created_at") or 0, reverse=True)
         logs = logs[:50]
     except Exception as e:
         flash(f"Error loading security logs: {e}", "danger")
         logs = []
     return render_template("admin/security.html", logs=logs)
-
-

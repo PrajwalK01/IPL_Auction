@@ -1,13 +1,14 @@
 {% extends "base.html" %}
-{% block title %}Bid History — {{ team.team_short_name }}{% endblock %}
+{% block title %}Auction History — {{ team.team_short_name }}{% endblock %}
 
 {% block navbar %}
 <nav class="navbar navbar-dark dashboard-navbar px-3 py-2 shadow-sm navbar-expand-lg">
   <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="{{ url_for('team.dashboard') }}">
     {% if team.team_logo %}
-      <img src="{{ team.team_logo or '' }}" width="34" height="34" class="rounded-circle" style="object-fit:cover;border:2px solid var(--ipl-orange);">
+      <img src="{{ team.team_logo }}" width="34" height="34" class="rounded-circle border border-warning" style="object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+      <div class="user-avatar-sm" style="display:none; width:34px; height:34px; font-size:0.7rem;">{{ team.team_short_name[:2] }}</div>
     {% else %}
-      <span class="navbar-logo-icon"><i class="bi bi-shield-fill"></i></span>
+      <div class="user-avatar-sm" style="width:34px; height:34px; font-size:0.7rem;">{{ team.team_short_name[:2] }}</div>
     {% endif %}
     <span>{{ team.team_short_name }} <span class="text-warning">Portal</span></span>
   </a>
@@ -30,43 +31,44 @@
     <div class="mt-4 p-3 rounded glass-card">
       <small class="text-muted d-block mb-1 text-uppercase fw-bold fs-xs">Player Purse</small>
       <h5 class="text-success fw-bold mb-3">₹{{ "%.2f"|format(player_remaining) }} Cr</h5>
-      
       <small class="text-muted d-block mb-1 text-uppercase fw-bold fs-xs">Mgmt Purse</small>
       <h5 class="text-info fw-bold mb-0">₹{{ "%.2f"|format(mgmt_remaining) }} Cr</h5>
     </div>
-
   </aside>
 
   <main class="dashboard-main">
     <div class="d-flex align-items-center justify-content-between mb-4">
-      <h1 class="page-title mb-0"><i class="bi bi-clock-history text-warning me-2"></i>Bid History</h1>
-      <span class="badge bg-secondary fs-6">Total Bids: {{ bids|length }}</span>
+      <h1 class="page-title mb-0"><i class="bi bi-clock-history text-warning me-2"></i>Auction History</h1>
+      <span class="badge bg-secondary fs-6">{{ logs|length }} Records</span>
     </div>
 
     <div class="card border-0 shadow" style="background:var(--surface-2);border-radius:var(--radius-lg)!important;">
       <div class="card-body p-0">
-        {% if bids %}
+        {% if logs %}
         <div class="table-responsive">
           <table class="table table-dark table-hover align-middle mb-0">
             <thead style="background:var(--surface-3);">
               <tr>
-                <th class="ps-4">Bid ID</th><th>Time</th><th>Player</th><th>Role</th>
-                <th>Bid Amount</th><th>Result</th>
+                <th class="ps-4">Player</th>
+                <th>Type</th>
+                <th>Price</th>
+                <th>Outcome</th>
               </tr>
             </thead>
             <tbody>
-            {% for b in bids %}
+            {% for lg in logs %}
             <tr>
-              <td class="ps-4"><code class="text-secondary">{{ b.bid_id }}</code></td>
-              <td>{{ b.bid_time.strftime('%d %b %Y, %H:%M:%S') }}</td>
-              <td><strong>{{ b.player_name }}</strong> <small class="text-muted">({{ b.player_id }})</small></td>
-              <td><span class="badge role-{{ b.role|replace(' ','_')|replace('-','_')|lower }}">{{ b.role }}</span></td>
-              <td><strong class="text-warning fs-5">₹{{ "%.2f"|format(b.bid_amount) }}Cr</strong></td>
+              <td class="ps-4">
+                <strong>{{ lg.player_name }}</strong>
+                <small class="text-muted d-block">{{ lg.player_id }}</small>
+              </td>
+              <td><span class="badge bg-secondary">{{ lg.player_collection or '—' }}</span></td>
+              <td><strong class="text-warning fs-5">₹{{ "%.2f"|format(lg.final_price) }}Cr</strong></td>
               <td>
-                {% if b.is_winning_bid %}
+                {% if lg.outcome == 'sold' %}
                   <span class="badge bg-success"><i class="bi bi-trophy-fill me-1"></i>Won</span>
                 {% else %}
-                  <span class="badge bg-secondary">Outbid</span>
+                  <span class="badge bg-secondary">{{ lg.outcome }}</span>
                 {% endif %}
               </td>
             </tr>
@@ -77,7 +79,7 @@
         {% else %}
         <div class="text-center py-5 text-muted">
           <i class="bi bi-hammer" style="font-size:3rem; opacity:0.5;"></i>
-          <p class="mt-3">No bids placed yet.</p>
+          <p class="mt-3">No auction history yet.</p>
         </div>
         {% endif %}
       </div>

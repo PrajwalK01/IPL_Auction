@@ -1,329 +1,350 @@
 {% extends "base.html" %}
-{% block title %}Team Dashboard — {{ team.team_short_name }}{% endblock %}
+{% block title %}Team Portal — {{ team.team_short_name }}{% endblock %}
 
 {% block navbar %}
-<nav class="navbar navbar-expand-lg navbar-dark dashboard-navbar px-3 shadow">
-  <div class="container-fluid">
-    <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="{{ url_for('team.dashboard') }}">
-      {% if team.team_logo %}
-        <img src="{{ team.team_logo or '' }}" width="40" height="40" class="rounded-circle border border-2 border-warning" style="object-fit:cover;">
-      {% else %}
-        <div class="navbar-logo-icon"><i class="bi bi-shield-fill"></i></div>
-      {% endif %}
-      <span class="fs-4 tracking-tight">{{ team.team_short_name }} <span class="text-warning">PORTAL</span></span>
-    </a>
-    
-    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-
-    <div class="collapse navbar-collapse" id="navMain">
-      <ul class="navbar-nav ms-auto align-items-center gap-3">
-        <li class="nav-item">
-          <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold">
-            <i class="bi bi-shield-check me-1"></i>TEAM OWNER
-          </span>
-        </li>
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle d-flex align-items-center gap-2 px-3 glass-card py-2" href="#" data-bs-toggle="dropdown">
-            <div class="user-avatar-sm">{{ team.team_short_name[:2]|upper }}</div>
-            <span class="fw-semibold text-white">{{ team.username }}</span>
-          </a>
-          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark glass-card border-0 shadow-lg mt-2">
-            <li><a class="dropdown-item py-2" href="{{ url_for('team.dashboard') }}"><i class="bi bi-grid-fill me-2"></i>Dashboard</a></li>
-            <li><hr class="dropdown-divider opacity-10"></li>
-            <li><a class="dropdown-item text-danger py-2" href="{{ url_for('auth.logout') }}"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
-          </ul>
-        </li>
-      </ul>
-    </div>
+<nav class="navbar navbar-dark dashboard-navbar px-3 py-2 shadow-sm navbar-expand-lg" id="mainNavbar">
+  <button class="navbar-toggler border-0 me-2 d-lg-none" type="button" onclick="document.querySelector('.dashboard-sidebar').classList.toggle('open')"><span class="navbar-toggler-icon"></span></button>
+  <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="{{ url_for('team.dashboard') }}">
+    {% if team.team_logo %}
+      <img src="{{ team.team_logo }}" width="34" height="34" class="rounded-circle border border-warning" style="object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+      <div class="user-avatar-sm" style="display:none; width:34px; height:34px; font-size:0.7rem;">{{ team.team_short_name[:2] }}</div>
+    {% else %}
+      <div class="user-avatar-sm" style="width:34px; height:34px; font-size:0.7rem;">{{ team.team_short_name[:2] }}</div>
+    {% endif %}
+    <span>{{ team.team_short_name }} <span class="text-warning">Portal</span></span>
+  </a>
+  <div class="ms-auto d-flex gap-2">
+    <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-outline-danger">Logout</a>
   </div>
 </nav>
 {% endblock %}
 
 {% block content %}
-<div class="dashboard-wrapper">
-  <aside class="dashboard-sidebar animate-fade-in">
-    <div class="sidebar-section-label">TEAM CONSOLE</div>
-    <ul class="sidebar-nav list-unstyled">
-      <li><a href="{{ url_for('team.dashboard') }}" class="sidebar-link active"><i class="bi bi-grid-1x2-fill"></i><span>Overview</span></a></li>
+<!-- FREEZE OVERLAY — blocks ALL interaction when admin freezes -->
+<div id="freezeOverlay" class="freeze-overlay" style="display:none;">
+  <div class="freeze-content">
+    <div class="freeze-icon"><i class="bi bi-snow"></i></div>
+    <h2 class="fw-900 text-white mb-2">AUCTION FROZEN</h2>
+    <p class="text-white-50 mb-0 fs-5">Please wait while the admin pauses the auction.</p>
+    <div class="freeze-pulse-ring"></div>
+  </div>
+</div>
+
+<div class="dashboard-wrapper" id="mainDashboard">
+  <aside class="dashboard-sidebar">
+    <div class="sidebar-section-label">TEAM MENU</div>
+    <ul class="sidebar-nav list-unstyled mb-0">
+      <li><a href="{{ url_for('team.dashboard') }}" class="sidebar-link active"><i class="bi bi-grid-1x2-fill"></i><span>Dashboard</span></a></li>
       <li><a href="{{ url_for('team.squad') }}" class="sidebar-link"><i class="bi bi-people-fill"></i><span>My Squad</span></a></li>
       <li><a href="{{ url_for('team.history') }}" class="sidebar-link"><i class="bi bi-clock-history"></i><span>Bid History</span></a></li>
     </ul>
 
-    <div class="mt-auto pt-4">
-      <div class="glass-card p-3 text-center">
-        <small class="text-muted d-block mb-2">Live Status</small>
-        <span class="badge bg-success-subtle text-success w-100 py-2">
-          <i class="bi bi-circle-fill me-2 blink fs-xs"></i>Auction Online
-        </span>
-      </div>
+    <div class="mt-4 p-3 rounded glass-card">
+      <small class="text-muted d-block mb-1 text-uppercase fw-bold fs-xs">Player Purse</small>
+      <h5 class="text-success fw-bold mb-3">₹{{ "%.2f"|format(player_remaining) }} Cr</h5>
+      <small class="text-muted d-block mb-1 text-uppercase fw-bold fs-xs">Mgmt Purse</small>
+      <h5 class="text-info fw-bold mb-0">₹{{ "%.2f"|format(mgmt_remaining) }} Cr</h5>
     </div>
   </aside>
 
-  <main class="dashboard-main animate-fade-in" style="animation-delay: 0.1s;">
-    <header class="page-header d-flex align-items-center gap-4 mb-5">
-      {% if team.team_logo %}
-      <div class="position-relative">
-        <img src="{{ team.team_logo or '' }}" width="100" height="100" class="rounded-circle shadow-lg border border-4 border-warning animate-pulse-slow" style="object-fit:cover;">
-        <div class="position-absolute bottom-0 end-0 bg-success border border-4 border-dark rounded-circle" style="width:24px;height:24px;"></div>
+  <main class="dashboard-main">
+    <!-- Stats Row -->
+    <div class="row g-4 mb-4">
+      <div class="col-6 col-lg-3">
+        <div class="glass-card p-4 text-center border-success">
+          <div class="fs-2 text-success fw-bold">₹{{ "%.2f"|format(player_remaining) }}Cr</div>
+          <small class="text-muted text-uppercase fw-bold">Player Purse Left</small>
+        </div>
       </div>
-      {% else %}
-      <div class="user-avatar-lg">{{ team.team_short_name }}</div>
-      {% endif %}
-      <div>
-        <h1 class="display-4 fw-800 mb-1 text-white">{{ team.team_name }}</h1>
+      <div class="col-6 col-lg-3">
+        <div class="glass-card p-4 text-center border-info">
+          <div class="fs-2 text-info fw-bold">₹{{ "%.2f"|format(mgmt_remaining) }}Cr</div>
+          <small class="text-muted text-uppercase fw-bold">Mgmt Purse Left</small>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="glass-card p-4 text-center border-primary">
+          <div class="fs-2 text-primary fw-bold">{{ squad_count }}</div>
+          <small class="text-muted text-uppercase fw-bold">Squad Size</small>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="glass-card p-4 text-center border-warning">
+          <div class="fs-2 text-warning fw-bold">{{ bid_count }}</div>
+          <small class="text-muted text-uppercase fw-bold">Players Won</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Auction Section -->
+    <div class="glass-card mb-4 border-warning overflow-hidden" id="auctionBox">
+      <div class="card-header d-flex align-items-center justify-content-between py-3 transition-base" id="auctionHeader" style="background: rgba(255, 255, 255, 0.02);">
         <div class="d-flex align-items-center gap-3">
-          <span class="text-muted fs-5"><i class="bi bi-geo-alt-fill me-1 text-warning"></i>{{ team.home_ground or 'Home Stadium' }}</span>
-          <span class="text-white-50">|</span>
-          <span class="badge bg-warning-subtle text-warning px-3 py-1">IPL 2026 Season</span>
+            <h5 class="mb-0 fw-bold text-warning" id="auctionTitle"><i class="bi bi-broadcast-pin me-2"></i>Live Auction</h5>
+            <button class="btn btn-sm btn-outline-warning d-none" id="goLiveBtn" onclick="toggleFullScreenLive()"><i class="bi bi-fullscreen me-1"></i>Go Fullscreen</button>
         </div>
+        <span class="badge bg-dark border border-secondary" id="auctionStatus">Checking...</span>
       </div>
-    </header>
-
-    <!-- LIVE BIDDING SECTION (Dynamic) -->
-    <div id="liveAuctionContainer" class="mb-5 animate-slide-up" style="display:none;">
-        <div class="glass-card p-5 border-warning border-4 shadow-lg" style="background: linear-gradient(135deg, rgba(251, 191, 36, 0.1), transparent);">
-            <div class="row align-items-center">
-                <div class="col-md-2 text-center d-none d-md-block">
-                    <div class="display-1 text-warning animate-pulse-slow"><i class="bi bi-hammer"></i></div>
-                </div>
-                <div class="col-md-5">
-                    <h2 class="text-white fw-800 mb-1">LIVE AUCTION IN PROGRESS</h2>
-                    <p class="text-muted fs-5 mb-0" id="livePlayerName">Fetching active player...</p>
-                    <div class="mt-3">
-                        <span class="text-white-50">Current Bid:</span>
-                        <div class="fw-900 text-white" id="liveCurrentBid" style="font-size: clamp(1.8rem, 6vw, 3rem);">₹0.00Cr</div>
-                        <div class="text-info fw-bold" id="liveLastBidder">Last Bidder: None</div>
-                    </div>
-                </div>
-                <div class="col-md-5 text-center text-md-end mt-4 mt-md-0">
-                    <button id="bidBtn" class="btn btn-warning btn-lg px-4 px-md-5 py-3 fw-900 fs-5 fs-md-3 shadow-lg hover-scale" onclick="placeBid()">
-                        <i class="bi bi-lightning-charge-fill me-2"></i>BID NOW (+10L)
-                    </button>
-                    <div class="mt-2 text-muted small">Remaining Purse: <span class="text-success fw-bold">₹{{ "%.2f"|format(player_remaining) }}Cr</span></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Stat Cards -->
-    <div class="row g-4 mb-5">
-      <div class="col-sm-6 col-xl-3">
-        <div class="stat-card glass-card h-100 p-4">
-          <div class="d-flex justify-content-between align-items-start mb-3">
-            <div class="stat-icon text-success"><i class="bi bi-person-check-fill"></i></div>
-            <span class="text-success small fw-bold">Active</span>
-          </div>
-          <div class="stat-value text-success">₹{{ "%.2f"|format(player_remaining) }}Cr</div>
-          <div class="text-muted small fw-600 text-uppercase tracking-wider">Player Purse Rem.</div>
-        </div>
-      </div>
-      <div class="col-sm-6 col-xl-3">
-        <div class="stat-card glass-card h-100 p-4">
-          <div class="d-flex justify-content-between align-items-start mb-3">
-            <div class="stat-icon text-info"><i class="bi bi-briefcase-fill"></i></div>
-            <span class="text-info small fw-bold">Mgmt/Mentors</span>
-          </div>
-          <div class="stat-value text-info">₹{{ "%.2f"|format(mgmt_remaining) }}Cr</div>
-          <div class="text-muted small fw-600 text-uppercase tracking-wider">Mgmt Purse Rem.</div>
-        </div>
-      </div>
-      <div class="col-sm-6 col-xl-3">
-        <div class="stat-card glass-card h-100 p-4">
-          <div class="d-flex justify-content-between align-items-start mb-3">
-            <div class="stat-icon text-primary"><i class="bi bi-people-fill"></i></div>
-            <span class="badge bg-primary-subtle text-primary">{{ squad_count }}</span>
-          </div>
-          <div class="stat-value">{{ squad_count }}</div>
-          <div class="text-muted small fw-600 text-uppercase tracking-wider">Squad Strength</div>
-        </div>
-      </div>
-      <div class="col-sm-6 col-xl-3">
-        <div class="stat-card glass-card h-100 p-4">
-          <div class="d-flex justify-content-between align-items-start mb-3">
-            <div class="stat-icon text-warning"><i class="bi bi-hammer"></i></div>
-            <span class="badge bg-warning-subtle text-warning">{{ bid_count }}</span>
-          </div>
-          <div class="stat-value">{{ bid_count }}</div>
-          <div class="text-muted small fw-600 text-uppercase tracking-wider">Bids Placed</div>
+      <div class="card-body p-4" id="auctionContent">
+        <div class="text-center py-4 text-muted">
+          <i class="bi bi-hourglass-split fs-1 d-block mb-2 animate-pulse-slow"></i>
+          <p>Waiting for auction to begin...</p>
         </div>
       </div>
     </div>
 
-
-    <!-- Recent Acquisitions -->
-    <div class="glass-card mb-4">
-      <div class="card-header d-flex align-items-center justify-content-between">
-        <h5 class="mb-0 fw-700"><i class="bi bi-lightning-charge-fill text-warning me-2"></i>Recent Acquisitions</h5>
-        <a href="{{ url_for('team.squad') }}" class="btn btn-sm btn-link text-warning text-decoration-none fw-bold">View Squad <i class="bi bi-arrow-right ms-1"></i></a>
-      </div>
+    <!-- Recent Purchases -->
+    {% if recent_buys %}
+    <div class="glass-card">
+      <div class="card-header py-3"><h5 class="mb-0 fw-bold"><i class="bi bi-trophy-fill text-warning me-2"></i>Recent Acquisitions</h5></div>
       <div class="card-body p-0">
-        {% if recent_buys %}
         <div class="table-responsive">
-          <table class="table table-hover mb-0">
-            <thead>
-              <tr>
-                <th>Player</th>
-                <th>Role</th>
-                <th>Nationality</th>
-                <th>Price Paid</th>
-                <th class="text-end">Timestamp</th>
-              </tr>
-            </thead>
+          <table class="table table-dark table-hover align-middle mb-0">
+            <thead><tr><th class="ps-4">Player</th><th>Price</th></tr></thead>
             <tbody>
-              {% for p in recent_buys %}
+              {% for b in recent_buys %}
               <tr>
-                <td>
-                  <div class="fw-bold text-white">{{ p.player_name }}</div>
-                  <small class="text-muted">ID: {{ p.player_id }}</small>
-                </td>
-                <td><span class="badge role-badge-{{ p.role|replace(' ','_')|replace('-','_')|lower }}">{{ p.role }}</span></td>
-                <td>{{ p.nationality }}</td>
-                <td><strong class="text-success fs-5">₹{{ p.final_price }}Cr</strong></td>
-                <td class="text-end text-muted small">{{ p.sold_at.strftime('%d %b, %I:%M %p') if p.sold_at else 'Just now' }}</td>
+                <td class="ps-4"><strong>{{ b.player_name }}</strong> <small class="text-muted">({{ b.player_id }})</small></td>
+                <td><span class="text-success fw-bold fs-5">₹{{ "%.2f"|format(b.final_price) }}Cr</span></td>
               </tr>
               {% endfor %}
             </tbody>
           </table>
         </div>
-        {% else %}
-        <div class="text-center py-5 opacity-50">
-          <i class="bi bi-cart-x fs-1 d-block mb-2"></i>
-          <p>No players acquired yet. Your bidding history will appear here.</p>
-        </div>
-        {% endif %}
       </div>
     </div>
+    {% endif %}
   </main>
 </div>
 
+<!-- Fullscreen Live Auction Overlay -->
+<div id="liveAuctionOverlay" class="live-overlay-container" style="display:none;">
+    <div class="overlay-header p-4 d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-3">
+            <div class="live-pill-red animate-pulse">● LIVE</div>
+            <div class="text-white-50">BIDDING CONSOLE — {{ team.team_short_name }}</div>
+        </div>
+        <button class="btn-close-overlay" onclick="toggleFullScreenLive()"><i class="bi bi-x-lg"></i></button>
+    </div>
+    
+    <div class="container h-100 d-flex align-items-center justify-content-center pb-5">
+        <div id="overlayContent" class="w-100 text-center">
+            <!-- Populated via JS -->
+        </div>
+    </div>
+</div>
+
 <style>
-  .user-avatar-sm {
-    width: 32px; height: 32px;
-    background: var(--grad-primary);
-    color: #000;
-    border-radius: 8px;
+/* ── Freeze Overlay ───────────────────────────────────────────────────── */
+.freeze-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(2, 6, 23, 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    z-index: 10000;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 800;
-    font-size: 0.8rem;
-  }
-  .user-avatar-lg {
-    width: 100px; height: 100px;
-    background: var(--grad-primary);
-    color: #000;
+    transition: opacity 0.2s cubic-bezier(0.19, 1, 0.22, 1);
+}
+.freeze-content {
+    text-align: center;
+    position: relative;
+}
+.freeze-icon {
+    font-size: 6rem;
+    color: #60a5fa;
+    animation: freezePulse 2s ease-in-out infinite;
+    margin-bottom: 1rem;
+}
+@keyframes freezePulse {
+    0%, 100% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(1.1); opacity: 1; }
+}
+.freeze-pulse-ring {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 200px; height: 200px;
+    margin: -100px 0 0 -100px;
+    border: 3px solid rgba(96, 165, 250, 0.3);
     border-radius: 50%;
+    animation: ringExpand 2.5s ease-out infinite;
+}
+@keyframes ringExpand {
+    0% { transform: scale(0.5); opacity: 1; }
+    100% { transform: scale(2); opacity: 0; }
+}
+.fw-900 { font-weight: 900; }
+.transition-base { transition: all 0.3s ease; }
+.shadow-glow-success { box-shadow: 0 0 20px rgba(16, 185, 129, 0.3); }
+.shadow-glow-success:hover { box-shadow: 0 0 30px rgba(16, 185, 129, 0.5); }
+.avatar-fallback {
+    width: 80px; height: 80px;
+    background: var(--surface-3);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2rem; font-weight: 900; color: #64748b;
+    border: 2px solid rgba(255,255,255,0.1);
+}
+
+/* ── Live Overlay ──────────────────────────────────────────────────────── */
+.live-overlay-container {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: radial-gradient(circle at center, #0f172a 0%, #000 100%);
+    z-index: 10001;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 800;
-    font-size: 2.5rem;
-    border: 4px solid var(--ipl-gold);
-  }
-  .fw-800 { font-weight: 800; }
-  .fw-700 { font-weight: 700; }
-  .tracking-tight { letter-spacing: -1px; }
-  .tracking-wider { letter-spacing: 1px; }
-  
-  @keyframes pulse-slow {
-    0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(251, 191, 36, 0.2); }
-    50% { transform: scale(1.02); box-shadow: 0 0 40px rgba(251, 191, 36, 0.4); }
-  }
-  .animate-pulse-slow { animation: pulse-slow 4s ease-in-out infinite; }
+    flex-direction: column;
+}
+.live-pill-red {
+    background: #ef4444; color: white; padding: 4px 12px; border-radius: 4px; font-weight: 900; font-size: 0.8rem;
+}
+.btn-close-overlay {
+    background: rgba(255,255,255,0.1); border: none; color: white; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.3s;
+}
+.btn-close-overlay:hover { background: #ef4444; }
+.shadow-glow-gold { box-shadow: 0 0 40px rgba(251, 191, 36, 0.4); }
+.player-lot-number { background: rgba(255,255,255,0.05); padding: 5px 15px; border-radius: 30px; display: inline-block; font-weight: 800; color: #94a3b8; }
 </style>
 
 <script>
-    async function checkAuctionState() {
-        try {
-            const resJson = await fetch("/auction/api/state");
-            const data = await resJson.json();
-            
-            const container = document.getElementById('liveAuctionContainer');
-            if (data.status === 'bidding') {
-                container.style.display = 'block';
-                document.getElementById('livePlayerName').innerText = data.player_name;
-                document.getElementById('liveCurrentBid').innerText = "₹" + data.current_bid + "Cr";
-                document.getElementById('liveLastBidder').innerText = "Last Bidder: " + (data.bidder_id || "None");
-                
-                // Disable button if you are the last bidder
-                const myTeamId = "{{ session.get('team_id_str') }}";
-                const btn = document.getElementById('bidBtn');
-                if (data.bidder_id === myTeamId) {
-                    btn.disabled = true;
-                    btn.innerText = "YOU ARE HIGHEST";
-                    btn.classList.replace('btn-warning', 'btn-success');
-                } else {
-                    btn.disabled = false;
-                    btn.innerText = "BID NOW (+10L)";
-                    btn.classList.replace('btn-success', 'btn-warning');
-                }
-            } else {
-                container.style.display = 'none';
-            }
-        } catch (e) { console.error("Poll error", e); }
-    }
+// ── Freeze Listener (polls every 500ms for <1s propagation) ──────────
+let isFrozen = false;
+async function checkFreezeStatus() {
+    try {
+        const res = await fetch("/api/freeze-status");
+        const data = await res.json();
+        const overlay = document.getElementById('freezeOverlay');
+        if (data.is_frozen && !isFrozen) {
+            isFrozen = true;
+            overlay.style.display = 'flex';
+            // Disable all buttons and links in dashboard
+            document.querySelectorAll('#mainDashboard button, #mainDashboard a.btn').forEach(el => el.disabled = true);
+        } else if (!data.is_frozen && isFrozen) {
+            isFrozen = false;
+            overlay.style.display = 'none';
+            document.querySelectorAll('#mainDashboard button, #mainDashboard a.btn').forEach(el => el.disabled = false);
+        }
+    } catch (e) { /* silent */ }
+}
+setInterval(checkFreezeStatus, 500);
+checkFreezeStatus();
 
-    async function placeBid() {
-        const btn = document.getElementById('bidBtn');
-        if (btn.disabled) return;
-        
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> BIDDING...';
-        
-        try {
-            const res = await fetch("{{ url_for('auction.team_bid') }}", { method: 'POST' });
-            const data = await res.json();
-            if (!data.success) {
-                alert(data.error);
-            }
-        } catch (e) { alert("Bid failed. Check connection."); }
-        finally { checkAuctionState(); }
-    }
+// ── Live Auction State Polling ───────────────────────────────────────
+async function checkAuctionState() {
+    try {
+        const res = await fetch("/auction/api/state");
+        const data = await res.json();
+        const header = document.getElementById('auctionHeader');
+        const title = document.getElementById('auctionTitle');
+        const goLiveBtn = document.getElementById('goLiveBtn');
+        const overlay = document.getElementById('liveAuctionOverlay');
+        const overlayContent = document.getElementById('overlayContent');
 
-    // Add Number Animation for stats
-    document.addEventListener("DOMContentLoaded", () => {
-        const statValues = document.querySelectorAll('.stat-value');
-        statValues.forEach(el => {
-            const finalValText = el.innerText;
-            // Only animate if it's a pure number or starts with ₹
-            let targetNum = parseFloat(finalValText.replace(/[^0-9.]/g, ''));
-            if (isNaN(targetNum)) return;
+        if (data.status === 'bidding') {
+            statusBadge.className = 'badge bg-success animate-pulse-slow';
+            statusBadge.innerText = 'LIVE';
+            header.style.background = 'rgba(16, 185, 129, 0.2)';
+            header.classList.add('border-success');
+            title.className = 'mb-0 fw-bold text-success';
+            goLiveBtn.classList.remove('d-none');
             
-            const isCurrency = finalValText.includes('₹');
-            const suffix = finalValText.includes('Cr') ? 'Cr' : '';
+            const html = `
+                <div class="row align-items-center">
+                    <div class="col-md-2 d-none d-md-block">
+                        <div class="player-photo-sm">
+                           ${data.photo ? `<img src="${data.photo}" class="rounded-circle border border-success" width="80" height="80" style="object-fit:cover;">` : `<div class="avatar-fallback">${(data.player_name || 'P')[0]}</div>`}
+                        </div>
+                    </div>
+                    <div class="col-md-6 text-start">
+                        <div class="mb-1"><span class="badge bg-success-subtle text-success small uppercase tracking-wider">Current Lot</span></div>
+                        <h2 class="text-white fw-900 mb-1">${data.player_name || data.player_id}</h2>
+                        <div class="fs-3 text-warning fw-bold">Current Bid: ₹${data.current_bid}Cr</div>
+                        <div class="text-muted small">High Bidder: <strong class="text-info">${data.team_name || data.bidder_id || 'No bids yet'}</strong></div>
+                    </div>
+                    <div class="col-md-4 text-end mt-3 mt-md-0">
+                        <button class="btn btn-lg btn-success fw-bold w-100 py-3 shadow-glow-success bid-button" id="bidBtn" onclick="placeBid()">
+                            <i class="bi bi-hammer me-2"></i>PLACE BID
+                        </button>
+                    </div>
+                </div>
+            `;
+            content.innerHTML = html;
             
-            let start = 0;
-            const duration = 1500;
-            const startTime = performance.now();
-            
-            function update(currentTime) {
-                const elapsed = currentTime - startTime;
-                const progress = Math.min(elapsed / duration, 1);
-                // easeOutQuad
-                const easeProgress = progress * (2 - progress);
-                
-                let currentVal = start + (targetNum - start) * easeProgress;
-                
-                if (isCurrency) {
-                    el.innerText = '₹' + currentVal.toFixed(2) + suffix;
-                } else {
-                    el.innerText = Math.floor(currentVal);
-                }
-                
-                if (progress < 1) {
-                    requestAnimationFrame(update);
-                } else {
-                    el.innerText = finalValText; // Ensure exact final value
-                }
+            // Populate overlay if open
+            if (isOverlayOpen) {
+                overlayContent.innerHTML = `
+                    <div class="player-lot-number mb-4">LOT: ${data.player_id}</div>
+                    <div class="mb-4">
+                        ${data.photo ? `<img src="${data.photo}" class="rounded-circle border border-warning shadow-glow-gold" width="200" height="200" style="object-fit:cover;">` : `<div class="avatar-fallback mx-auto" style="width:200px;height:200px;font-size:5rem;">${(data.player_name || 'P')[0]}</div>`}
+                    </div>
+                    <h1 class="display-3 fw-900 text-white mb-2 animate-fade-in">${data.player_name}</h1>
+                    <div class="d-flex justify-content-center gap-4 mb-5 text-white-50">
+                        <span><i class="bi bi-geo-alt me-1"></i>${data.nationality || 'IND'}</span>
+                        <span><i class="bi bi-person-badge me-1"></i>${data.player_type || 'BATTER'}</span>
+                        <span><i class="bi bi-star me-1"></i>BASE: ₹${data.base_price}Cr</span>
+                    </div>
+                    <div class="glass-card d-inline-block p-5 mb-5 border-success" style="background:rgba(16, 185, 129, 0.05); min-width: 400px;">
+                        <div class="text-success-emphasis small uppercase fw-800 tracking-widest mb-2">CURRENT BID BY ${data.team_name || 'NO ONE'}</div>
+                        <div class="display-1 fw-900 text-white">₹${data.current_bid}Cr</div>
+                    </div>
+                    <div class="mt-4">
+                        <button class="btn btn-lg btn-success fw-bold px-5 py-4 fs-2 shadow-glow-success" onclick="placeBid()">
+                            <i class="bi bi-hammer me-2"></i>PLACE BID NOW
+                        </button>
+                    </div>
+                `;
             }
-            requestAnimationFrame(update);
+        } else {
+            statusBadge.className = 'badge bg-secondary';
+            statusBadge.innerText = 'IDLE';
+            header.style.background = 'rgba(255, 255, 255, 0.02)';
+            title.className = 'mb-0 fw-bold text-warning';
+            goLiveBtn.classList.add('d-none');
+            content.innerHTML = '<div class="text-center py-4 text-muted"><i class="bi bi-hourglass-split fs-1 d-block mb-2"></i><p>Waiting for auction to begin...</p></div>';
+            if (isOverlayOpen) toggleFullScreenLive(); // Close overlay if idle
+        }
+    } catch (e) { /* silent */ }
+}
+setInterval(checkAuctionState, 3000);
+checkAuctionState();
+
+let isOverlayOpen = false;
+function toggleFullScreenLive() {
+    const overlay = document.getElementById('liveAuctionOverlay');
+    isOverlayOpen = !isOverlayOpen;
+    overlay.style.display = isOverlayOpen ? 'flex' : 'none';
+    if (isOverlayOpen) checkAuctionState();
+}
+
+// ── Place Bid ────────────────────────────────────────────────────────
+async function placeBid() {
+    if (isFrozen) { alert('Auction is frozen!'); return; }
+    const btn = document.getElementById('bidBtn');
+    if (!btn) return;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>BIDDING...';
+    try {
+        const res = await fetch("/team/place-bid", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
         });
-    });
-
-    // Poll every 5 seconds (reduced reads)
-    setInterval(checkAuctionState, 5000);
-    checkAuctionState();
+        const data = await res.json();
+        if (data.success) {
+            btn.innerHTML = '<i class="bi bi-check-lg me-2"></i>BID PLACED!';
+            btn.className = 'btn btn-lg btn-success fw-bold px-5 py-3';
+            setTimeout(() => checkAuctionState(), 1000);
+        } else {
+            alert(data.error || 'Bid failed');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-hammer me-2"></i>PLACE BID';
+        }
+    } catch (e) {
+        alert('Network error. Try again.');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-hammer me-2"></i>PLACE BID';
+    }
+}
 </script>
 {% endblock %}
