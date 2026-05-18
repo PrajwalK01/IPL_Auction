@@ -57,106 +57,26 @@ def generate_player_id(collection_name):
 
 
 def generate_team_id():
-    """Generate a sequential team ID like TE-0001 using a counter document."""
     db = get_db()
-    counter_ref = db.collection("counters").document("teams")
-
-    @firestore.transactional
-    def _increment(transaction):
-        snapshot = counter_ref.get(transaction=transaction)
-        if snapshot.exists:
-            current = snapshot.to_dict().get("current", 0)
-        else:
-            current = 0
-        new_val = current + 1
-        transaction.set(counter_ref, {"current": new_val})
-        return new_val
-
-    transaction = db.transaction()
-    seq = _increment(transaction)
-    return f"TE-{seq:04d}"
-
-
-# ── Password Hashing ────────────────────────────────────────────────────────
-def hash_password(plain_text):
-    """Return plain-text password (no hashing per user request)."""
-    return plain_text
+    teams_ref = db.collection("teams")
+    docs = teams_ref.get()
+    
+    if not docs:
+        return "T-0001"
+    
+    # Filter for T- prefix IDs
+    team_ids = [d.id for d in docs if d.id.startswith("T-")]
+    if not team_ids:
+        return "T-0001"
+        
+    team_ids.sort(reverse=True)
+    last_id = team_ids[0]
+    num = int(last_id.split("-")[1])
+    return f"T-{num + 1:04d}"
 
 
-def verify_password(plain_text, stored_password):
-    """Verify a plain-text password."""
-    return plain_text == stored_password
-
-
-# ── Input Sanitization ───────────────────────────────────────────────────────
-def sanitize_input(value):
-    """Strip HTML tags and escape special characters from user input."""
-    if value is None:
-        return None
-    if not isinstance(value, str):
-        return value
-    value = value.strip()
-    # Remove HTML tags
-    value = re.sub(r"<[^>]+>", "", value)
-    # Escape remaining HTML entities
-    value = html.escape(value, quote=True)
-    return value
-
-
-def sanitize_dict(data, keys=None):
-    """Sanitize all string values in a dict. If keys is provided, only those."""
-    sanitized = {}
-    for k, v in data.items():
-        if keys and k not in keys:
-            sanitized[k] = v
-        elif isinstance(v, str):
-            sanitized[k] = sanitize_input(v)
-        else:
-            sanitized[k] = v
-    return sanitized
-
-
-# ── App Config (Singleton Cache) ─────────────────────────────────────────────
-_config_cache = None
-
-
-def get_app_config(force_refresh=False):
-    """Read the singleton config/app_config document.
-
-    Caches in-memory for the lifetime of the process.
-    Call with force_refresh=True after admin edits.
-    """
-    global _config_cache
-    if _config_cache is not None and not force_refresh:
-        return _config_cache
-
-    db = get_db()
-    doc = db.collection("config").document("app_config").get()
-    if doc.exists:
-        _config_cache = doc.to_dict()
-    else:
-        # Create default config if missing
-        default = {
-            "nationalities": ["Indian", "Australian", "English", "South African",
-                              "West Indian", "New Zealand", "Sri Lankan",
-                              "Bangladeshi", "Afghan", "Zimbabwean"],
-            "bowling_styles": ["Right-arm Fast", "Left-arm Fast",
-                               "Right-arm Medium", "Left-arm Medium",
-                               "Right-arm Off-spin", "Left-arm Orthodox",
-                               "Right-arm Leg-spin", "Left-arm Chinaman"],
-            "batting_styles": ["Right-Hand", "Left-Hand"],
-            "player_types": ["Capped", "Uncapped"],
-            "updated_at": firestore.SERVER_TIMESTAMP,
-        }
-        db.collection("config").document("app_config").set(default)
-        _config_cache = default
-
-    return _config_cache
-
-
-def update_app_config(category, value):
-    """Add a new value to a config array (e.g. add a nationality)."""
-    global _config_cache
+def generate_player_id(role):
+    code = ROLE_CODE.get(role, "PL")
     db = get_db()
     ref = db.collection("config").document("app_config")
     ref.update({

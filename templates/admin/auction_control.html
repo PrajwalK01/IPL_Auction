@@ -13,11 +13,16 @@
     <div class="row g-4">
         <!-- Status Header -->
         <div class="col-12">
+<<<<<<< HEAD
             <div class="glass-card p-4 d-flex align-items-center justify-content-between flex-wrap gap-3" style="background:var(--surface-2); border-left: 5px solid var(--ipl-gold);">
+=======
+            <div class="glass-card p-4 d-flex align-items-center justify-content-between flex-wrap gap-3">
+>>>>>>> af413426eed48331f1d8932dfbb3f7c7a2bd8f48
                 <div>
                     <h1 class="page-title mb-1"><i class="bi bi-broadcast text-danger me-2"></i>Auction Command Center</h1>
                     <p class="text-muted mb-0">Push players to the big screen and manage live bidding state.</p>
                 </div>
+<<<<<<< HEAD
                 <div class="d-flex gap-3 align-items-center flex-wrap">
                     
                     <!-- Continue / Freeze Controls -->
@@ -99,6 +104,15 @@
                             </a>
                         </div>
                     </div>
+=======
+                <div class="d-flex gap-2 align-items-center">
+                    {% if is_frozen %}
+                    <span class="badge bg-danger fs-6 px-4 py-2"><i class="bi bi-snow me-1"></i>FROZEN</span>
+                    {% endif %}
+                    <span class="badge bg-{{ 'success' if state.status == 'bidding' else 'secondary' }} fs-6 px-4 py-2">
+                        Status: {{ state.status|upper }}
+                    </span>
+>>>>>>> af413426eed48331f1d8932dfbb3f7c7a2bd8f48
                 </div>
             </div>
         </div>
@@ -115,7 +129,11 @@
                                 <div>
                                     <h3 class="text-white mb-0">NOW ON SCREEN: <span class="text-warning">{{ state.player_id }}</span></h3>
                                     <div class="fs-2 text-white">CURRENT BID: <span class="text-warning fw-900" id="adminCurrentBid">₹{{ state.current_bid }}Cr</span></div>
+<<<<<<< HEAD
                                     <div class="text-white-50">Last Bidder: <span class="text-info fw-bold" id="adminBidderId">{{ state.team_name or state.bidder_id or 'NONE' }}</span></div>
+=======
+                                    <div class="text-white-50">Last Bidder: <span class="text-info fw-bold" id="adminBidderId">{{ state.bidder_id or 'NONE' }}</span></div>
+>>>>>>> af413426eed48331f1d8932dfbb3f7c7a2bd8f48
                                 </div>
                             </div>
                         </div>
@@ -198,15 +216,24 @@
                         window.location.reload();
                         return;
                     }
+<<<<<<< HEAD
                     if (data.current_bid != lastAdminBid || data.bidder_id != lastAdminBidder) {
                         lastAdminBid = data.current_bid;
                         lastAdminBidder = data.bidder_id;
+=======
+                    if (data.current_bid != lastAdminBid) {
+                        lastAdminBid = data.current_bid;
+>>>>>>> af413426eed48331f1d8932dfbb3f7c7a2bd8f48
                         const bidEl = document.getElementById('adminCurrentBid');
                         bidEl.innerText = "₹" + data.current_bid + "Cr";
                         bidEl.style.color = "#4ade80";
                         bidEl.style.transform = "scale(1.1)";
                         setTimeout(() => { bidEl.style.color = ""; bidEl.style.transform = "scale(1)"; }, 250);
+<<<<<<< HEAD
                         document.getElementById('adminBidderId').innerText = data.team_name || data.bidder_id || 'NONE';
+=======
+                        document.getElementById('adminBidderId').innerText = data.bidder_id || 'NONE';
+>>>>>>> af413426eed48331f1d8932dfbb3f7c7a2bd8f48
                         const soldBtn = document.getElementById('adminSoldBtn');
                         soldBtn.disabled = !data.bidder_id;
                     }
@@ -240,7 +267,11 @@
                             </thead>
                             <tbody id="playerTableBody">
                                 {% for p in players %}
+<<<<<<< HEAD
                                 <tr data-category="{{ p._collection }}">
+=======
+                                <tr>
+>>>>>>> af413426eed48331f1d8932dfbb3f7c7a2bd8f48
                                     <td class="ps-4"><span class="badge bg-secondary">{{ p.id }}</span></td>
                                     <td>
                                         <div class="fw-bold">{{ p.player_name }}</div>
@@ -275,6 +306,7 @@
   </main>
 </div>
 
+<<<<<<< HEAD
 <div class="modal fade" id="teamSquadModal" tabindex="-1" aria-labelledby="teamSquadModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content text-white border-0 shadow-lg" style="background: var(--surface-3); border-radius: var(--radius-lg); border: 2px solid var(--ipl-gold) !important;">
@@ -470,6 +502,18 @@
             tableBody.innerHTML = `<tr><td colspan="4" class="text-center text-danger py-4">Error loading squad data.</td></tr>`;
         }
     }
+=======
+<script>
+    // Simple table filter
+    document.getElementById('playerSearch').addEventListener('keyup', function() {
+        let filter = this.value.toUpperCase();
+        let rows = document.querySelectorAll('#playerTableBody tr');
+        rows.forEach(row => {
+            let text = row.innerText.toUpperCase();
+            row.style.display = text.indexOf(filter) > -1 ? "" : "none";
+        });
+    });
+>>>>>>> af413426eed48331f1d8932dfbb3f7c7a2bd8f48
 </script>
 
 <style>
@@ -479,6 +523,7 @@
         50% { border-color: #fff; box-shadow: 0 0 30px rgba(251, 191, 36, 0.4); }
     }
     .fw-900 { font-weight: 900; }
+<<<<<<< HEAD
     .btn-no-style {
         background: none;
         border: 1px solid rgba(255,255,255,0.15);
@@ -492,5 +537,7 @@
         transform: translateY(-1px);
         box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }
+=======
+>>>>>>> af413426eed48331f1d8932dfbb3f7c7a2bd8f48
 </style>
 {% endblock %}

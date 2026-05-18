@@ -214,6 +214,7 @@ def reset_password(tid):
     except Exception as e:
         flash(f"Error: {e}", "danger")
     return redirect(url_for("admin_teams.team_credentials"))
+<<<<<<< HEAD
 
 
 IPL_FRANCHISES = [
@@ -336,3 +337,5 @@ def run_simulation():
     except Exception as e:
         flash(f"Simulation failed: {e}", "danger")
     return redirect(url_for("admin_teams.simulation"))
+=======
+>>>>>>> af413426eed48331f1d8932dfbb3f7c7a2bd8f48

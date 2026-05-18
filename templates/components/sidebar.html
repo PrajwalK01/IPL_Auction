@@ -15,8 +15,12 @@
 
   <div class="sidebar-section-label">FRANCHISE MANAGEMENT</div>
   <ul class="sidebar-nav list-unstyled mb-0">
+<<<<<<< HEAD
     <li><a href="{{ url_for('admin_teams.list_teams') }}" class="sidebar-link {{ 'active' if request.endpoint and 'teams' in request.endpoint and request.endpoint not in ('admin_teams.team_credentials', 'admin_teams.assign_ipl') else '' }}"><i class="bi bi-shield-shaded"></i><span>Teams</span></a></li>
     <li><a href="{{ url_for('admin_teams.assign_ipl') }}" class="sidebar-link {{ 'active' if request.endpoint == 'admin_teams.assign_ipl' else '' }}"><i class="bi bi-tag-fill"></i><span>Assign Franchises</span></a></li>
+=======
+    <li><a href="{{ url_for('admin_teams.list_teams') }}" class="sidebar-link {{ 'active' if request.endpoint and 'teams' in request.endpoint and request.endpoint != 'admin_teams.team_credentials' else '' }}"><i class="bi bi-shield-shaded"></i><span>Teams</span></a></li>
+>>>>>>> af413426eed48331f1d8932dfbb3f7c7a2bd8f48
     <li><a href="{{ url_for('admin_mentors.list_mentors') }}" class="sidebar-link {{ 'active' if request.endpoint and 'mentors' in request.endpoint else '' }}"><i class="bi bi-person-workspace"></i><span>Mentors</span></a></li>
     <li><a href="{{ url_for('admin_teams.team_credentials') }}" class="sidebar-link {{ 'active' if request.endpoint == 'admin_teams.team_credentials' else '' }}"><i class="bi bi-key-fill"></i><span>Credentials</span></a></li>
   </ul>
@@ -24,7 +28,10 @@
   <div class="sidebar-section-label">LIVE OPERATIONS</div>
   <ul class="sidebar-nav list-unstyled mb-0">
     <li><a href="{{ url_for('auction.controller') }}" class="sidebar-link {{ 'active' if request.endpoint == 'auction.controller' else '' }}"><i class="bi bi-broadcast-pin"></i><span>Auction Control</span></a></li>
+<<<<<<< HEAD
     <li><a href="{{ url_for('admin_teams.simulation') }}" class="sidebar-link {{ 'active' if request.endpoint == 'admin_teams.simulation' else '' }}"><i class="bi bi-cpu-fill"></i><span>AI Predictor</span></a></li>
+=======
+>>>>>>> af413426eed48331f1d8932dfbb3f7c7a2bd8f48
     <li><a href="{{ url_for('auction.live_view') }}" class="sidebar-link" target="_blank"><i class="bi bi-tv-fill"></i><span>Live Screen</span></a></li>
     <li><a href="{{ url_for('dashboard.security_logs') }}" class="sidebar-link {{ 'active' if request.endpoint == 'dashboard.security_logs' else '' }}"><i class="bi bi-shield-fill-exclamation"></i><span>Security Logs</span></a></li>
   </ul>

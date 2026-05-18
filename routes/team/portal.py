@@ -59,6 +59,7 @@ def dashboard():
     mgmt_remaining = float(team.get("mgmt_purse", 0)) - float(team.get("mgmt_spent", 0))
 
     return render_template("team/dashboard.html",
+<<<<<<< HEAD
                            team=team,
                            squad_count=squad_count,
                            bid_count=bid_count,
@@ -66,6 +67,15 @@ def dashboard():
                            mgmt_remaining=mgmt_remaining,
                            recent_buys=recent_buys,
                            )
+=======
+        team=team,
+        squad_count=squad_count,
+        bid_count=bid_count,
+        player_remaining=player_remaining,
+        mgmt_remaining=mgmt_remaining,
+        recent_buys=recent_buys,
+    )
+>>>>>>> af413426eed48331f1d8932dfbb3f7c7a2bd8f48
 
 
 @team_bp.route("/squad")
@@ -130,6 +140,7 @@ def history():
     return render_template("team/history.html", team=team, logs=logs,
                            player_remaining=player_remaining,
                            mgmt_remaining=mgmt_remaining)
+<<<<<<< HEAD
 
 
 @team_bp.route("/playing11", methods=["GET", "POST"])
@@ -208,3 +219,5 @@ def predictions():
     return render_template("team/predictions.html", team=team, predictions=predictions,
                            player_remaining=player_remaining,
                            mgmt_remaining=mgmt_remaining)
+=======
+>>>>>>> af413426eed48331f1d8932dfbb3f7c7a2bd8f48

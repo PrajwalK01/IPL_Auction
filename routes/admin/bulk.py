@@ -133,6 +133,7 @@ def upload_players():
             return redirect(request.url)
 
     return render_template("admin/bulk_upload.html")
+<<<<<<< HEAD
 
 
 @bulk_bp.route("/seed-legends", methods=["POST"])
@@ -180,3 +181,5 @@ def seed_legends():
     except Exception as e:
         flash(f"Error seeding legends: {e}", "danger")
     return redirect(url_for("admin_bulk.upload_players"))
+=======
+>>>>>>> af413426eed48331f1d8932dfbb3f7c7a2bd8f48
