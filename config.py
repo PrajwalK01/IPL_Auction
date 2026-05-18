@@ -1,11 +1,11 @@
 """
-config.py — Application configuration
+config.py — Application configuration.
 Reads from environment variables or falls back to .env file values.
 """
 
 import os
 
-# Load .env file manually if python-dotenv is not installed
+# Load .env file manually
 _env_path = os.path.join(os.path.dirname(__file__), ".env")
 if os.path.exists(_env_path):
     with open(_env_path) as f:
@@ -15,16 +15,9 @@ if os.path.exists(_env_path):
                 key, _, val = line.partition("=")
                 os.environ.setdefault(key.strip(), val.strip())
 
-SECRET_KEY  = os.environ.get("SECRET_KEY",  "ipl_auction_super_secret_2026")
-
-# DB Config
-DB_HOST     = os.environ.get("DB_HOST", "localhost")
-DB_PORT     = int(os.environ.get("DB_PORT", 3306))
-DB_USER     = os.environ.get("DB_USER", "root")
-DB_PASSWORD = os.environ.get("DB_PASSWORD", "")
-DB_NAME     = os.environ.get("DB_NAME", "ipl_auction_db")
+SECRET_KEY = os.environ.get("SECRET_KEY", "ipl_auction_super_secret_2026")
 
 # Firebase Config
-FIREBASE_STORAGE_BUCKET = os.environ.get("FIREBASE_STORAGE_BUCKET", "ipl-auction-fbe62.appspot.com")
-
-
+FIREBASE_STORAGE_BUCKET = os.environ.get(
+    "FIREBASE_STORAGE_BUCKET", "ipl-auction-fbe62.appspot.com"
+)

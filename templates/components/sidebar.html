@@ -1,0 +1,32 @@
+<aside class="dashboard-sidebar">
+  <div class="sidebar-section-label">AUCTION ADMIN</div>
+  <ul class="sidebar-nav list-unstyled mb-0">
+    <li><a href="{{ url_for('dashboard.index') }}" class="sidebar-link {{ 'active' if request.endpoint == 'dashboard.index' else '' }}"><i class="bi bi-grid-1x2-fill"></i><span>Dashboard</span></a></li>
+  </ul>
+
+  <div class="sidebar-section-label">PLAYER CATEGORIES</div>
+  <ul class="sidebar-nav list-unstyled mb-0">
+    <li><a href="{{ url_for('admin_batters.list_batters') }}" class="sidebar-link {{ 'active' if request.endpoint and 'batters' in request.endpoint else '' }}"><i class="bi bi-person-fill"></i><span>Batters</span></a></li>
+    <li><a href="{{ url_for('admin_bowlers.list_bowlers') }}" class="sidebar-link {{ 'active' if request.endpoint and 'bowlers' in request.endpoint else '' }}"><i class="bi bi-bullseye"></i><span>Bowlers</span></a></li>
+    <li><a href="{{ url_for('admin_all_rounders.list_all_rounders') }}" class="sidebar-link {{ 'active' if request.endpoint and 'all_rounders' in request.endpoint else '' }}"><i class="bi bi-stars"></i><span>All-Rounders</span></a></li>
+    <li><a href="{{ url_for('admin_wicket_keepers.list_wicket_keepers') }}" class="sidebar-link {{ 'active' if request.endpoint and 'wicket_keepers' in request.endpoint else '' }}"><i class="bi bi-shield-fill"></i><span>Wicket Keepers</span></a></li>
+    <li><a href="{{ url_for('admin_bulk.upload_players') }}" class="sidebar-link {{ 'active' if request.endpoint == 'admin_bulk.upload_players' else '' }}"><i class="bi bi-file-earmark-excel-fill text-success"></i><span>Bulk Upload</span></a></li>
+  </ul>
+
+  <div class="sidebar-section-label">FRANCHISE MANAGEMENT</div>
+  <ul class="sidebar-nav list-unstyled mb-0">
+    <li><a href="{{ url_for('admin_teams.list_teams') }}" class="sidebar-link {{ 'active' if request.endpoint and 'teams' in request.endpoint and request.endpoint not in ('admin_teams.team_credentials', 'admin_teams.assign_ipl') else '' }}"><i class="bi bi-shield-shaded"></i><span>Teams</span></a></li>
+    <li><a href="{{ url_for('admin_teams.assign_ipl') }}" class="sidebar-link {{ 'active' if request.endpoint == 'admin_teams.assign_ipl' else '' }}"><i class="bi bi-tag-fill"></i><span>Assign Franchises</span></a></li>
+    <li><a href="{{ url_for('admin_mentors.list_mentors') }}" class="sidebar-link {{ 'active' if request.endpoint and 'mentors' in request.endpoint else '' }}"><i class="bi bi-person-workspace"></i><span>Mentors</span></a></li>
+    <li><a href="{{ url_for('admin_teams.team_credentials') }}" class="sidebar-link {{ 'active' if request.endpoint == 'admin_teams.team_credentials' else '' }}"><i class="bi bi-key-fill"></i><span>Credentials</span></a></li>
+  </ul>
+
+  <div class="sidebar-section-label">LIVE OPERATIONS</div>
+  <ul class="sidebar-nav list-unstyled mb-0">
+    <li><a href="{{ url_for('auction.controller') }}" class="sidebar-link {{ 'active' if request.endpoint == 'auction.controller' else '' }}"><i class="bi bi-broadcast-pin"></i><span>Auction Control</span></a></li>
+    <li><a href="{{ url_for('admin_teams.simulation') }}" class="sidebar-link {{ 'active' if request.endpoint == 'admin_teams.simulation' else '' }}"><i class="bi bi-cpu-fill"></i><span>AI Predictor</span></a></li>
+    <li><a href="{{ url_for('auction.live_view') }}" class="sidebar-link" target="_blank"><i class="bi bi-tv-fill"></i><span>Live Screen</span></a></li>
+    <li><a href="{{ url_for('dashboard.security_logs') }}" class="sidebar-link {{ 'active' if request.endpoint == 'dashboard.security_logs' else '' }}"><i class="bi bi-shield-fill-exclamation"></i><span>Security Logs</span></a></li>
+  </ul>
+</aside>
+<div class="sidebar-backdrop" onclick="document.querySelector('.dashboard-sidebar').classList.remove('open')"></div>

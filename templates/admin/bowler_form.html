@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+{% block title %}{{ action }} Bowler — Admin{% endblock %}
+{% block navbar %}
+{% include 'components/navbar.html' %}
+{% endblock %}
+{% block content %}
+<div class="dashboard-wrapper">
+  {% include 'components/sidebar.html' %}
+  <main class="dashboard-main">
+    <div class="row justify-content-center">
+      <div class="col-12 col-lg-9 col-xl-8">
+        <h1 class="page-title mb-4"><i class="bi bi-bullseye text-success me-2"></i>{{ action }} Bowler</h1>
+        <div class="card border-0 shadow" style="background:var(--surface-2);border-radius:var(--radius-lg)!important;">
+          <div class="card-body p-4">
+            <form method="POST" enctype="multipart/form-data">
+
+              {% if player %}
+              <div class="mb-3">
+                <label class="form-label fw-medium text-muted">Player ID</label>
+                <input type="text" class="form-control bg-dark border-secondary text-info fw-bold" value="{{ player.player_id }}" readonly>
+              </div>
+              {% else %}
+              <div class="alert alert-info py-2 small"><i class="bi bi-info-circle me-1"></i>Player ID is auto-generated (e.g. BL-0001).</div>
+              {% endif %}
+
+              <div class="row g-3 mb-3">
+                <div class="col-md-8">
+                  <label class="form-label fw-medium">Full Name <span class="text-danger">*</span></label>
+                  <input type="text" name="player_name" class="form-control bg-dark border-secondary text-light"
+                         placeholder="Jasprit Bumrah" value="{{ player.player_name if player else '' }}" required>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label fw-medium">Capped Status</label>
+                  <select name="capped_status" class="form-select bg-dark border-secondary text-light">
+                    {% for t in player_types %}
+                    <option value="{{ t }}" {% if player and ((player.capped and t == 'Capped') or (not player.capped and t == 'Uncapped')) %}selected{% endif %}>{{ t }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+
+              <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label class="form-label fw-medium mb-0">Nationality</label>
+                    <button type="button" class="btn btn-sm btn-link text-warning p-0" onclick="openAddModal('nationality')">
+                      <i class="bi bi-plus-circle"></i>
+                    </button>
+                  </div>
+                  <select name="nationality" id="nationality_select" class="form-select bg-dark border-secondary text-light">
+                    <option value="">-- Select --</option>
+                    {% for n in nationalities %}
+                    <option value="{{ n }}" {% if player and player.nationality == n %}selected{% elif not player and n == 'Indian' %}selected{% endif %}>{{ n }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label fw-medium">Age</label>
+                  <input type="number" name="age" min="15" max="50" class="form-control bg-dark border-secondary text-light"
+                         placeholder="25" value="{{ player.age or '' if player else '' }}">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label fw-medium">Base Price (Cr) <span class="text-danger">*</span></label>
+                  <div class="input-group">
+                    <span class="input-group-text bg-dark border-secondary text-warning">₹</span>
+                    <input type="number" name="base_price" step="0.05" min="0.05"
+                           class="form-control bg-dark border-secondary text-light"
+                           value="{{ player.base_price if player else '0.20' }}" required>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                  <label class="form-label fw-medium">Batting Style</label>
+                  <select name="batting_style" class="form-select bg-dark border-secondary text-light">
+                    <option value="">-- Select --</option>
+                    {% for s in batting_styles %}
+                    <option value="{{ s }}" {% if player and player.batting_style == s %}selected{% endif %}>{{ s }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label class="form-label fw-medium mb-0">Bowling Style</label>
+                    <button type="button" class="btn btn-sm btn-link text-warning p-0" onclick="openAddModal('bowling')">
+                      <i class="bi bi-plus-circle"></i>
+                    </button>
+                  </div>
+                  <select name="bowling_style" id="bowling_select" class="form-select bg-dark border-secondary text-light">
+                    <option value="">-- Select --</option>
+                    {% for b in bowling_styles %}
+                    <option value="{{ b }}" {% if player and player.bowling_style == b %}selected{% endif %}>{{ b }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label fw-medium">Bowling Arm</label>
+                  <select name="bowling_arm" class="form-select bg-dark border-secondary text-light">
+                    <option value="">-- Select --</option>
+                    <option value="Right-arm" {% if player and player.bowling_arm == 'Right-arm' %}selected{% endif %}>Right-arm</option>
+                    <option value="Left-arm" {% if player and player.bowling_arm == 'Left-arm' %}selected{% endif %}>Left-arm</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                  <label class="form-label fw-medium text-info">Matches</label>
+                  <input type="number" name="matches" class="form-control bg-dark border-info text-light"
+                         placeholder="50" value="{{ player.matches or '' if player else '' }}">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label fw-medium text-success">Economy</label>
+                  <input type="number" step="0.01" name="economy" class="form-control bg-dark border-success text-light"
+                         placeholder="7.5" value="{{ player.economy or '' if player else '' }}">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label fw-medium text-warning">Wickets</label>
+                  <input type="number" name="wickets" class="form-control bg-dark border-warning text-light"
+                         placeholder="100" value="{{ player.wickets or '' if player else '' }}">
+                </div>
+              </div>
+
+              <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                  <label class="form-label fw-medium">Player Photo</label>
+                  <input type="file" name="photo" class="form-control bg-dark border-secondary text-light" accept="image/*">
+                  {% if player and player.photo %}
+                  <div class="mt-2 d-flex align-items-center gap-2">
+                    <img src="{{ player.photo or '' }}" width="40" height="40" class="rounded-circle" style="object-fit:cover;">
+                    <small class="text-muted">Current photo</small>
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="d-flex gap-3 mt-4">
+                <button type="submit" class="btn btn-success fw-semibold px-4">
+                  <i class="bi bi-check-circle-fill me-2"></i>{{ action }} Bowler
+                </button>
+                <a href="{{ url_for('admin_bowlers.list_bowlers') }}" class="btn btn-outline-secondary px-4">Cancel</a>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Add Option Modal -->
+<div class="modal fade" id="addOptionModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content bg-dark border-secondary text-light">
+      <div class="modal-header border-secondary">
+        <h5 class="modal-title" id="modalTitle">Add New Option</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="currentCategory">
+        <div class="mb-3">
+          <label class="form-label" id="modalLabel">Enter Value</label>
+          <input type="text" id="newValue" class="form-control bg-dark border-secondary text-light">
+        </div>
+      </div>
+      <div class="modal-footer border-secondary">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary btn-sm" id="saveOptionBtn" onclick="saveOption()">Save Option</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let optionModal;
+document.addEventListener('DOMContentLoaded', () => {
+    const modalEl = document.getElementById('addOptionModal');
+    if (typeof bootstrap !== 'undefined') optionModal = new bootstrap.Modal(modalEl);
+});
+function openAddModal(category) {
+    document.getElementById('currentCategory').value = category;
+    let title = "", label = "", placeholder = "";
+    if (category === 'nationality') { title = "Add Nationality"; label = "Country Name"; placeholder = "Ex: South Africa"; }
+    else if (category === 'bowling') { title = "Add Bowling Style"; label = "Style Name"; placeholder = "Ex: Left-arm Chinaman"; }
+    document.getElementById('modalTitle').innerText = title;
+    document.getElementById('modalLabel').innerText = label;
+    document.getElementById('newValue').placeholder = placeholder;
+    document.getElementById('newValue').value = "";
+    if (optionModal) optionModal.show();
+}
+async function saveOption() {
+    const category = document.getElementById('currentCategory').value;
+    const value = document.getElementById('newValue').value.trim();
+    if (!value) { alert("Please enter a value."); return; }
+    const btn = document.getElementById('saveOptionBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving...';
+    try {
+        const response = await fetch("{{ url_for('admin_bowlers.add_option') }}", {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ category, value })
+        });
+        const result = await response.json();
+        if (result.success) {
+            const selectId = category === 'nationality' ? 'nationality_select' : 'bowling_select';
+            const select = document.getElementById(selectId);
+            const opt = document.createElement('option');
+            opt.value = value; opt.innerText = value; opt.selected = true;
+            select.appendChild(opt);
+            optionModal.hide();
+        } else { alert("Error: " + result.error); }
+    } catch (err) { alert("Failed to save."); }
+    finally { btn.disabled = false; btn.innerHTML = 'Save Option'; }
+}
+</script>
+{% endblock %}

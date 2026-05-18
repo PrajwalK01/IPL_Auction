@@ -5,9 +5,10 @@
 <nav class="navbar navbar-dark dashboard-navbar px-3 py-2 shadow-sm navbar-expand-lg">
   <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="{{ url_for('team.dashboard') }}">
     {% if team.team_logo %}
-      <img src="{{ team.team_logo or '' }}" width="34" height="34" class="rounded-circle" style="object-fit:cover;border:2px solid var(--ipl-orange);">
+      <img src="{{ team.team_logo }}" width="34" height="34" class="rounded-circle border border-warning" style="object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+      <div class="user-avatar-sm" style="display:none; width:34px; height:34px; font-size:0.7rem;">{{ team.team_short_name[:2] }}</div>
     {% else %}
-      <span class="navbar-logo-icon"><i class="bi bi-shield-fill"></i></span>
+      <div class="user-avatar-sm" style="width:34px; height:34px; font-size:0.7rem;">{{ team.team_short_name[:2] }}</div>
     {% endif %}
     <span>{{ team.team_short_name }} <span class="text-warning">Portal</span></span>
   </a>
@@ -25,6 +26,8 @@
     <ul class="sidebar-nav list-unstyled mb-0">
       <li><a href="{{ url_for('team.dashboard') }}" class="sidebar-link"><i class="bi bi-grid-1x2-fill"></i><span>Dashboard</span></a></li>
       <li><a href="{{ url_for('team.squad') }}" class="sidebar-link active"><i class="bi bi-people-fill"></i><span>My Squad</span></a></li>
+      <li><a href="{{ url_for('team.playing11') }}" class="sidebar-link {{ 'active' if request.endpoint == 'team.playing11' else '' }}"><i class="bi bi-ui-checks"></i><span>Playing XI</span></a></li>
+      <li><a href="{{ url_for('team.predictions') }}" class="sidebar-link"><i class="bi bi-trophy-fill"></i><span>Predictions</span></a></li>
       <li><a href="{{ url_for('team.history') }}" class="sidebar-link"><i class="bi bi-clock-history"></i><span>Bid History</span></a></li>
     </ul>
     <div class="mt-4 p-3 rounded glass-card">
@@ -64,7 +67,15 @@
                   <div style="width:40px;height:40px;border-radius:50%;background:var(--surface-3);display:flex;align-items:center;justify-content:center;font-size:1rem;color:#64748b;">{{ p.player_name[:1] }}</div>
                 {% endif %}
               </td>
-              <td><strong>{{ p.player_name }}</strong><br><small class="text-muted">{{ p.player_id }}</small></td>
+              <td>
+                <strong>{{ p.player_name }}</strong>
+                {% if team.playing_11_ids and p.player_id in team.playing_11_ids %}
+                  <span class="badge bg-warning text-dark ms-1" style="font-size:0.7rem; padding: 0.2em 0.5em;">XI</span>
+                {% elif team.impact_player_id and p.player_id == team.impact_player_id %}
+                  <span class="badge bg-success ms-1" style="font-size:0.7rem; padding: 0.2em 0.5em;">IMPACT</span>
+                {% endif %}
+                <br><small class="text-muted">{{ p.player_id }}</small>
+              </td>
               <td><span class="badge role-{{ p.role|replace(' ','_')|replace('-','_')|lower }}">{{ p.role }}</span></td>
               <td>
                 <div class="small">Bat: {{ p.batting_style or '—' }}</div>
@@ -72,7 +83,7 @@
               </td>
               <td>{{ p.nationality }}</td>
               <td>{% if p.capped %}<span class="badge bg-warning text-dark">Capped</span>{% else %}<span class="badge bg-secondary">Uncapped</span>{% endif %}</td>
-              <td><strong class="text-success fs-5">₹{{ "%.2f"|format(p.final_price) }}Cr</strong></td>
+              <td><strong class="text-success fs-5">₹{{ "%.2f"|format(p.sold_price or 0) }}Cr</strong></td>
             </tr>
             {% endfor %}
             </tbody>

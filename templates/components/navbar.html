@@ -1,0 +1,45 @@
+<nav class="navbar navbar-dark dashboard-navbar px-3 py-2 shadow-sm navbar-expand-lg border-bottom border-white-10" style="background: var(--surface-2);">
+  <button class="navbar-toggler border-0 me-2 d-lg-none" type="button" onclick="document.querySelector('.dashboard-sidebar').classList.toggle('open')">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="{{ url_for('dashboard.index') }}">
+    <div class="navbar-logo-icon" style="background: var(--grad-primary); border-radius: 8px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; color: #fff;">
+      <i class="bi bi-cricket fs-5"></i>
+    </div>
+    <span class="tracking-widest">IPL <span class="text-warning">AUCTION</span></span>
+  </a>
+
+  <!-- Animated Horizontal Live Header -->
+  <div class="mx-auto" id="liveAuctionHeader">
+      <!-- Populated via JS if auction is live -->
+  </div>
+
+  <div class="ms-auto d-flex align-items-center gap-3">
+    {% if session.get('user_type') == 'admin' %}
+      <span class="text-white-50 small d-none d-md-inline"><i class="bi bi-shield-lock-fill text-success me-1"></i>Admin Console</span>
+    {% endif %}
+    <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-outline-danger shadow-sm"><i class="bi bi-power me-1"></i>Logout</a>
+  </div>
+</nav>
+
+<script>
+async function updateNavbarLiveState() {
+    try {
+        const res = await fetch("/auction/api/state");
+        const data = await res.json();
+        const liveHeader = document.getElementById('liveAuctionHeader');
+        if (data.status === "bidding" && data.player_id) {
+            liveHeader.innerHTML = `
+                <div class="d-flex align-items-center gap-3 px-4 py-1 animate-glow-pulse" style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; border-radius: 30px; box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);">
+                    <div class="spinner-grow spinner-grow-sm text-success" role="status"></div>
+                    <span class="fw-bold text-success" style="letter-spacing: 2px;">LIVE AUCTION: <span class="text-white">${data.player_id}</span></span>
+                </div>
+            `;
+        } else {
+            liveHeader.innerHTML = '';
+        }
+    } catch (e) { /* ignore */ }
+}
+setInterval(updateNavbarLiveState, 2000);
+updateNavbarLiveState();
+</script>

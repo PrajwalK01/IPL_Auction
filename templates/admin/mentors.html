@@ -2,39 +2,12 @@
 {% block title %}Mentors & Coaches — Admin{% endblock %}
 
 {% block navbar %}
-<nav class="navbar navbar-dark dashboard-navbar px-3 py-2 shadow-sm navbar-expand-lg">
-  <button class="navbar-toggler border-0 me-2 d-lg-none" type="button" onclick="document.querySelector('.dashboard-sidebar').classList.toggle('open')">
-    <span class="navbar-toggler-icon"></span>
-  </button>
-  <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="{{ url_for('dashboard.index') }}">
-    <span class="navbar-logo-icon"><i class="bi bi-cricket"></i></span>
-    <span>IPL <span class="text-warning">AUCTION</span></span>
-  </a>
-  <div class="ms-auto d-flex gap-2">
-    <a href="{{ url_for('dashboard.index') }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Dashboard</a>
-    <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-outline-danger">Logout</a>
-  </div>
-</nav>
+{% include 'components/navbar.html' %}
 {% endblock %}
 
 {% block content %}
 <div class="dashboard-wrapper">
-  <aside class="dashboard-sidebar">
-    <div class="sidebar-section-label">ADMIN MENU</div>
-    <ul class="sidebar-nav list-unstyled mb-0">
-      <li><a href="{{ url_for('dashboard.index') }}" class="sidebar-link"><i class="bi bi-grid-1x2-fill"></i><span>Dashboard</span></a></li>
-      <li><a href="{{ url_for('auction.controller') }}" class="sidebar-link text-warning"><i class="bi bi-broadcast"></i><span>Live Auction</span></a></li>
-      <li><a href="{{ url_for('admin_players.list_players') }}" class="sidebar-link"><i class="bi bi-people-fill"></i><span>Players</span></a></li>
-      <li><a href="{{ url_for('admin_teams.list_teams') }}" class="sidebar-link"><i class="bi bi-shield-shaded"></i><span>Teams</span></a></li>
-      <li><a href="{{ url_for('admin_mentors.list_mentors') }}" class="sidebar-link active"><i class="bi bi-person-workspace"></i><span>Mentors & Coaches</span></a></li>
-    </ul>
-    
-    <div class="mt-4 pt-4 border-top border-white-10">
-        <a href="{{ url_for('admin_mentors.add_mentor') }}" class="btn btn-warning w-100 fw-bold py-2 shadow-sm">
-            <i class="bi bi-plus-circle-fill me-2"></i>ADD NEW STAFF
-        </a>
-    </div>
-  </aside>
+  {% include 'components/sidebar.html' %}
 
   <main class="dashboard-main animate-fade-in">
     <div class="d-flex align-items-center justify-content-between mb-4">

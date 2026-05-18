@@ -3,13 +3,7 @@
 
 {% block content %}
 <div class="dashboard-wrapper">
-  <aside class="dashboard-sidebar">
-    <div class="sidebar-section-label">ADMIN MENU</div>
-    <ul class="sidebar-nav list-unstyled mb-0">
-      <li><a href="{{ url_for('dashboard.index') }}" class="sidebar-link"><i class="bi bi-grid-1x2-fill"></i><span>Dashboard</span></a></li>
-      <li><a href="{{ url_for('admin_mentors.list_mentors') }}" class="sidebar-link active"><i class="bi bi-person-workspace"></i><span>Mentors & Coaches</span></a></li>
-    </ul>
-  </aside>
+  {% include 'components/sidebar.html' %}
 
   <main class="dashboard-main animate-fade-in">
     <div class="mb-4">

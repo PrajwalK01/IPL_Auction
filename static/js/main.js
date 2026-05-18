@@ -1,24 +1,33 @@
-// main.js — IPL Auction Frontend Helpers
+/* main.js — Global JavaScript helpers (v2) */
 
-// Auto-dismiss flash alerts after 4 seconds
-document.addEventListener("DOMContentLoaded", () => {
-  const alerts = document.querySelectorAll(".alert");
-  alerts.forEach((alert) => {
-    setTimeout(() => {
-      const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
-      bsAlert.close();
+document.addEventListener("DOMContentLoaded", function () {
+    // Auto-dismiss flash alerts after 4 seconds
+    setTimeout(function () {
+        let alerts = document.querySelectorAll('.alert:not(.alert-important)');
+        alerts.forEach(function (alert) {
+            let bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+        });
     }, 4000);
-  });
 
-  // Mobile sidebar toggle (attach to navbar toggler in future)
-  const sidebar = document.getElementById("sidebar");
-  if (sidebar) {
-    document.addEventListener("click", (e) => {
-      if (window.innerWidth < 992) {
-        if (!sidebar.contains(e.target) && !e.target.closest(".navbar-toggler")) {
-          sidebar.classList.remove("open");
+    // Sidebar toggle (mobile)
+    document.addEventListener('click', function(e) {
+        const sidebar = document.querySelector('.dashboard-sidebar');
+        const toggler = document.querySelector('.navbar-toggler');
+        
+        if (sidebar && sidebar.classList.contains('open')) {
+            if (!sidebar.contains(e.target) && (!toggler || !toggler.contains(e.target))) {
+                sidebar.classList.remove('open');
+            }
         }
-      }
     });
-  }
 });
+
+// App Config Caching (Session Storage)
+async function getCachedConfig() {
+    let cached = sessionStorage.getItem('ipl_app_config');
+    if (cached) {
+        return JSON.parse(cached);
+    }
+    return null; // The server will render config directly in templates, this is just for future API usage if needed.
+}

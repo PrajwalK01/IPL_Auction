@@ -2,42 +2,12 @@
 {% block title %}Security Audit — Admin{% endblock %}
 
 {% block navbar %}
-<nav class="navbar navbar-expand-lg navbar-dark dashboard-navbar px-3 shadow">
-  <div class="container-fluid">
-    <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="{{ url_for('dashboard.index') }}">
-      <div class="navbar-logo-icon" style="background: linear-gradient(135deg, #ef4444 0%, #991b1b 100%);"><i class="bi bi-shield-fill-check"></i></div>
-      <span class="fs-4 tracking-tight">SECURITY <span class="text-danger">SYSTEM</span></span>
-    </a>
-    <div class="ms-auto d-flex align-items-center gap-3">
-      <a href="{{ url_for('dashboard.index') }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Dashboard</a>
-      <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-outline-danger">Logout</a>
-    </div>
-  </div>
-</nav>
+{% include 'components/navbar.html' %}
 {% endblock %}
 
 {% block content %}
 <div class="dashboard-wrapper">
-  <aside class="dashboard-sidebar animate-fade-in">
-    <div class="sidebar-section-label">AUDIT CONSOLE</div>
-    <ul class="sidebar-nav list-unstyled">
-      <li><a href="{{ url_for('dashboard.index') }}" class="sidebar-link"><i class="bi bi-grid-1x2-fill"></i><span>Overview</span></a></li>
-      <li><a href="{{ url_for('admin_players.list_players') }}" class="sidebar-link"><i class="bi bi-people-fill"></i><span>Players</span></a></li>
-      <li><a href="{{ url_for('admin_teams.list_teams') }}" class="sidebar-link"><i class="bi bi-shield-shaded"></i><span>Teams</span></a></li>
-      <li><a href="{{ url_for('admin_teams.team_credentials') }}" class="sidebar-link"><i class="bi bi-key-fill"></i><span>Credentials</span></a></li>
-      <li><a href="{{ url_for('dashboard.security_logs') }}" class="sidebar-link active"><i class="bi bi-shield-fill-exclamation"></i><span>Security Logs</span></a></li>
-    </ul>
-    
-    <div class="mt-auto pt-4">
-      <div class="glass-card p-3 border-danger shadow-sm">
-        <div class="d-flex align-items-center gap-2 mb-2">
-          <div class="spinner-grow spinner-grow-sm text-danger" role="status"></div>
-          <small class="fw-bold text-danger">LIVE MONITORING</small>
-        </div>
-        <p class="small text-white-50 mb-0">System is actively logging all access attempts and session events.</p>
-      </div>
-    </div>
-  </aside>
+  {% include 'components/sidebar.html' %}
 
   <main class="dashboard-main animate-fade-in">
     <header class="page-header d-flex align-items-center justify-content-between mb-4">
@@ -98,6 +68,7 @@
                 <th>Username</th>
                 <th>IP Address</th>
                 <th>Status</th>
+                <th>Doc ID</th>
                 <th class="pe-4">Metadata</th>
               </tr>
             </thead>
@@ -123,6 +94,14 @@
                     {% else %}
                       <span class="text-danger small fw-bold"><i class="bi bi-x-circle me-1"></i>BLOCKED</span>
                     {% endif %}
+                  </td>
+                  <td>
+                    <div class="d-flex align-items-center gap-2">
+                      <small class="text-info" style="font-size:0.65rem; opacity:0.6; font-family: monospace;">{{ log.id }}</small>
+                      <button class="btn btn-sm btn-link text-info p-0" onclick="navigator.clipboard.writeText('{{ log.id }}'); this.innerHTML='<i class=\'bi bi-check\'></i>'; setTimeout(()=>this.innerHTML='<i class=\'bi bi-copy\'></i>', 1000)" title="Copy ID">
+                        <i class="bi bi-copy" style="font-size: 0.7rem;"></i>
+                      </button>
+                    </div>
                   </td>
                   <td class="pe-4">
                     <button class="btn btn-sm btn-link text-muted p-0" data-bs-toggle="tooltip" title="{{ log.user_agent }}">

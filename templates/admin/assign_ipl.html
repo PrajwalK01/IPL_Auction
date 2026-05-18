@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}Assign IPL Franchises — Admin{% endblock %}
+{% block navbar %}
+{% include 'components/navbar.html' %}
+{% endblock %}
+{% block content %}
+<div class="dashboard-wrapper">
+  {% include 'components/sidebar.html' %}
+  <main class="dashboard-main">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <h1 class="page-title mb-0"><i class="bi bi-shield-fill text-warning me-2"></i>Assign IPL Franchises</h1>
+      <a href="{{ url_for('admin_teams.list_teams') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Back to Teams</a>
+    </div>
+
+    <div class="card border-0 shadow" style="background:var(--surface-2); border-radius:var(--radius-lg)!important;">
+      <div class="card-body p-4">
+        <p class="text-white-50 mb-4">
+          Assign real IPL franchises to custom teams (e.g. mapping "Team 1" to "Royal Challengers Bengaluru").
+          Once assigned, the team's identity, logos, and dashboard colors will dynamically reflect their chosen franchise.
+        </p>
+
+        <form method="POST" enctype="multipart/form-data">
+          <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-4">
+              <thead style="background:var(--surface-3);">
+                <tr>
+                  <th class="ps-4" style="width: 15%;">Team ID</th>
+                  <th style="width: 25%;">Custom Name</th>
+                  <th style="width: 20%;">Current Assignment</th>
+                  <th class="pe-4" style="width: 40%;">Assign IPL Franchise & Logo</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for t in teams %}
+                <tr>
+                  <td class="ps-4">
+                    <span class="badge bg-warning text-dark fs-6">{{ t.team_id }}</span>
+                  </td>
+                  <td>
+                    <strong>{{ t.original_name or t.team_name }}</strong>
+                    {% if t.owner_name %}
+                    <br><small class="text-muted">Owner: {{ t.owner_name }}</small>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if t.ipl_franchise_id %}
+                    <div class="d-flex align-items-center gap-2">
+                      {% if t.team_logo %}
+                        <img src="{{ t.team_logo }}" width="28" height="28" class="rounded-circle border border-warning" style="object-fit:cover;">
+                      {% else %}
+                        <div class="user-avatar-sm" style="width:28px; height:28px; font-size:0.6rem;">{{ t.team_short_name[:2] }}</div>
+                      {% endif %}
+                      <span class="badge bg-primary">{{ t.team_short_name }}</span>
+                    </div>
+                    {% else %}
+                    <span class="text-muted small">No Franchise Assigned</span>
+                    {% endif %}
+                  </td>
+                  <td class="pe-4">
+                    <div class="d-flex align-items-center gap-2">
+                      <!-- Dropdown Franchise Select -->
+                      <select name="{{ t.id }}" class="form-select bg-dark border-secondary text-light flex-grow-1">
+                        <option value="">-- No Franchise Assigned --</option>
+                        {% for f in franchises %}
+                        <option value="{{ f.id }}" {% if t.ipl_franchise_id == f.id %}selected{% endif %}>
+                          {{ f.name }} ({{ f.short_name }})
+                        </option>
+                        {% endfor %}
+                      </select>
+
+                      <!-- Custom Logo Upload Area with Plus Icon -->
+                      <div class="logo-upload-btn-wrapper">
+                        <label for="logo_input_{{ t.id }}" class="btn btn-outline-warning d-flex align-items-center justify-content-center" style="width: 38px; height: 38px; border-radius: var(--radius-md); cursor: pointer;" title="Upload Custom Logo">
+                          <i class="bi bi-plus-lg"></i>
+                        </label>
+                        <input type="file" id="logo_input_{{ t.id }}" name="logo_{{ t.id }}" accept="image/*" class="d-none" onchange="previewLogo(this, 'preview_{{ t.id }}')">
+                      </div>
+
+                      <!-- Image Preview Area -->
+                      <div id="preview_container_{{ t.id }}" class="d-flex align-items-center justify-content-center rounded-circle border border-secondary" style="width: 38px; height: 38px; overflow: hidden; background: rgba(255,255,255,0.05);" title="Logo Preview">
+                        {% if t.team_logo %}
+                          <img id="preview_{{ t.id }}" src="{{ t.team_logo }}" style="width: 100%; height: 100%; object-fit: cover;">
+                        {% else %}
+                          <span id="preview_{{ t.id }}" class="text-muted small"><i class="bi bi-image"></i></span>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          <div class="d-flex gap-3">
+            <button type="submit" class="btn btn-warning text-dark fw-bold px-4">
+              <i class="bi bi-save-fill me-2"></i>Save Assignments
+            </button>
+            <a href="{{ url_for('admin_teams.list_teams') }}" class="btn btn-outline-secondary">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+function previewLogo(input, previewId) {
+    if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var previewEl = document.getElementById(previewId);
+            if (previewEl.tagName === 'IMG') {
+                previewEl.src = e.target.result;
+            } else {
+                var container = previewEl.parentElement;
+                container.innerHTML = '<img id="' + previewId + '" src="' + e.target.result + '" style="width: 100%; height: 100%; object-fit: cover;">';
+            }
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+</script>
+{% endblock %}

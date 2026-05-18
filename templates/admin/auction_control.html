@@ -2,46 +2,103 @@
 {% block title %}Auction Control Panel — Admin{% endblock %}
 
 {% block navbar %}
-<nav class="navbar navbar-dark dashboard-navbar px-3 py-2 shadow-sm navbar-expand-lg">
-  <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="{{ url_for('dashboard.index') }}">
-    <span class="navbar-logo-icon"><i class="bi bi-hammer"></i></span>
-    <span>AUCTION <span class="text-warning">CONTROL</span></span>
-  </a>
-  <div class="ms-auto d-flex gap-2">
-    <a href="{{ url_for('dashboard.index') }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Dashboard</a>
-    <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-outline-danger">Logout</a>
-  </div>
-</nav>
+{% include 'components/navbar.html' %}
 {% endblock %}
 
 {% block content %}
 <div class="dashboard-wrapper">
-  <aside class="dashboard-sidebar">
-    <div class="sidebar-section-label">AUCTION MODES</div>
-    <ul class="sidebar-nav list-unstyled">
-      <li><a href="#" class="sidebar-link active"><i class="bi bi-play-circle-fill"></i><span>Live Console</span></a></li>
-      <li><a href="{{ url_for('admin_players.list_players') }}" class="sidebar-link"><i class="bi bi-people-fill"></i><span>Manage Players</span></a></li>
-    </ul>
-    
-    <div class="mt-4 p-3 glass-card border-warning">
-        <small class="text-muted d-block mb-1">LIVE PREVIEW</small>
-        <a href="{{ url_for('auction.live_view') }}" target="_blank" class="btn btn-sm btn-warning w-100 fw-bold">Open Public Screen <i class="bi bi-box-arrow-up-right ms-1"></i></a>
-    </div>
-  </aside>
+  {% include 'components/sidebar.html' %}
 
   <main class="dashboard-main">
     <div class="row g-4">
         <!-- Status Header -->
         <div class="col-12">
-            <div class="glass-card p-4 d-flex align-items-center justify-content-between">
+            <div class="glass-card p-4 d-flex align-items-center justify-content-between flex-wrap gap-3" style="background:var(--surface-2); border-left: 5px solid var(--ipl-gold);">
                 <div>
                     <h1 class="page-title mb-1"><i class="bi bi-broadcast text-danger me-2"></i>Auction Command Center</h1>
                     <p class="text-muted mb-0">Push players to the big screen and manage live bidding state.</p>
                 </div>
-                <div class="text-end">
-                    <span class="badge bg-{{ 'success' if state.status == 'bidding' else 'secondary' }} fs-6 px-4 py-2">
-                        Status: {{ state.status|upper }}
-                    </span>
+                <div class="d-flex gap-3 align-items-center flex-wrap">
+                    
+                    <!-- Continue / Freeze Controls -->
+                    {% if is_frozen %}
+                    <form method="POST" action="{{ url_for('auction.toggle_freeze') }}" class="d-inline">
+                        <button type="submit" class="btn btn-success fw-bold px-3 py-2 shadow-sm">
+                            <i class="bi bi-play-fill me-1"></i>CONTINUE AUCTION
+                        </button>
+                    </form>
+                    {% else %}
+                    <form method="POST" action="{{ url_for('auction.toggle_freeze') }}" class="d-inline">
+                        <button type="submit" class="btn btn-warning text-dark fw-bold px-3 py-2 shadow-sm">
+                            <i class="bi bi-snow me-1"></i>FREEZE AUCTION
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    <!-- Stop / Reset Control -->
+                    {% if state.status == 'bidding' or state.status == 'team_showcase' %}
+                    <form method="POST" action="{{ url_for('auction.reset_auction') }}" class="d-inline" onsubmit="return confirm('Are you sure you want to stop the active broadcast?');">
+                        <button type="submit" class="btn btn-danger fw-bold px-3 py-2 shadow-sm">
+                            <i class="bi bi-stop-circle me-1"></i>{% if state.status == 'team_showcase' %}STOP SHOWCASE{% else %}STOP AUCTION{% endif %}
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    <div class="d-flex gap-2">
+                        {% if is_frozen %}
+                        <span class="badge bg-danger fs-6 px-3 py-2 shadow-sm"><i class="bi bi-snow me-1"></i>FROZEN</span>
+                        {% endif %}
+                        <span class="badge bg-{{ 'success' if state.status == 'bidding' else ('info text-dark' if state.status == 'team_showcase' else 'secondary') }} fs-6 px-3 py-2 shadow-sm">
+                            Status: {{ state.status|upper }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Categories & Team Navigation Header -->
+        <div class="col-12">
+            <div class="glass-card p-3" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius-md);">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <!-- Player Categories Quick Links -->
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <span class="text-white-50 small fw-bold me-2"><i class="bi bi-filter-circle-fill text-info me-1"></i>FILTER PLAYERS:</span>
+                        <button type="button" id="filter-btn-all" onclick="filterByCategory('all', this)" class="btn btn-sm btn-info category-filter-btn active rounded-pill px-3 fw-bold shadow-sm">
+                            ALL AVAILABLE
+                        </button>
+                        <button type="button" onclick="filterByCategory('batters', this)" class="btn btn-sm btn-outline-info category-filter-btn rounded-pill px-3 fw-bold shadow-sm">
+                            <i class="bi bi-person-fill me-1"></i>BATTERS
+                        </button>
+                        <button type="button" onclick="filterByCategory('bowlers', this)" class="btn btn-sm btn-outline-info category-filter-btn rounded-pill px-3 fw-bold shadow-sm">
+                            <i class="bi bi-bullseye me-1"></i>BOWLERS
+                        </button>
+                        <button type="button" onclick="filterByCategory('all_rounders', this)" class="btn btn-sm btn-outline-info category-filter-btn rounded-pill px-3 fw-bold shadow-sm">
+                            <i class="bi bi-stars me-1"></i>ALL-ROUNDERS
+                        </button>
+                        <button type="button" onclick="filterByCategory('wicket_keepers', this)" class="btn btn-sm btn-outline-info category-filter-btn rounded-pill px-3 fw-bold shadow-sm">
+                            <i class="bi bi-shield-fill me-1"></i>WICKET KEEPERS
+                        </button>
+                    </div>
+                    
+                    <!-- IPL Teams Quick Links -->
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <span class="text-white-50 small fw-bold me-2"><i class="bi bi-shield-fill text-warning me-1"></i>LIVE SQUAD VIEWER:</span>
+                        <div class="d-flex align-items-center gap-1 flex-wrap">
+                            {% for t in teams %}
+                                {% if t.ipl_franchise_id %}
+                                    <button type="button" onclick="showTeamSquad('{{ t.id }}')" class="badge d-flex align-items-center gap-1 p-2 border border-secondary bg-dark hover-gold animate-glow-pulse cursor-pointer btn-no-style" style="border-radius: var(--radius-sm); border-color: {{ t.team_color }} !important; cursor: pointer;" title="View {{ t.team_name }} Squad">
+                                        {% if t.team_logo %}
+                                            <img src="{{ t.team_logo }}" width="16" height="16" class="rounded-circle" style="object-fit:cover;">
+                                        {% endif %}
+                                        <span class="text-white fw-bold">{{ t.team_short_name }}</span>
+                                    </button>
+                                {% endif %}
+                            {% endfor %}
+                            <a href="{{ url_for('admin_teams.list_teams') }}" class="btn btn-sm btn-outline-warning rounded-circle" style="width: 28px; height: 28px; padding:0; display:flex; align-items:center; justify-content:center;" title="Manage Teams">
+                                <i class="bi bi-pencil-fill" style="font-size:0.8rem;"></i>
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -57,8 +114,8 @@
                                 <div class="fs-1 text-warning"><i class="bi bi-lightning-fill"></i></div>
                                 <div>
                                     <h3 class="text-white mb-0">NOW ON SCREEN: <span class="text-warning">{{ state.player_id }}</span></h3>
-                                    <div class="fs-2 text-white">CURRENT BID: <span class="text-warning fw-900" id="adminCurrentBid" style="transition: all 0.3s ease;">₹{{ state.current_bid }}Cr</span></div>
-                                    <div class="text-white-50">Last Bidder: <span class="text-info fw-bold" id="adminBidderId">{{ state.bidder_id or 'NONE' }}</span></div>
+                                    <div class="fs-2 text-white">CURRENT BID: <span class="text-warning fw-900" id="adminCurrentBid">₹{{ state.current_bid }}Cr</span></div>
+                                    <div class="text-white-50">Last Bidder: <span class="text-info fw-bold" id="adminBidderId">{{ state.team_name or state.bidder_id or 'NONE' }}</span></div>
                                 </div>
                             </div>
                         </div>
@@ -83,12 +140,48 @@
                                         <i class="bi bi-hammer me-2"></i>SOLD
                                     </button>
                                 </form>
-                                <form method="POST" action="{{ url_for('auction.reset_auction') }}">
+                                <form method="POST" action="{{ url_for('auction.mark_unsold') }}">
                                     <button type="submit" class="btn btn-outline-danger btn-lg px-4 fw-bold">
-                                        <i class="bi bi-x-circle me-2"></i>UNSOLD / RESET
+                                        <i class="bi bi-x-circle me-2"></i>UNSOLD
                                     </button>
                                 </form>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Admin Bid / Franchise Selector -->
+                    <div class="row mt-4 pt-3 border-top border-secondary-subtle">
+                        <div class="col-12 text-start">
+                            <h5 class="text-white mb-3 fw-bold fs-6"><i class="bi bi-hammer text-warning me-2"></i>Place Bid on behalf of Franchise</h5>
+                            <form method="POST" action="{{ url_for('auction.admin_place_bid') }}">
+                                <div class="row g-2 align-items-center">
+                                    <div class="col-md-6 col-lg-7">
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-dark border-secondary text-white-50"><i class="bi bi-shield-fill text-warning"></i></span>
+                                            <select name="team_id" class="form-select bg-dark border-secondary text-light" required style="border-radius: 0 var(--radius-md) var(--radius-md) 0;">
+                                                <option value="">-- Select Team to Bid --</option>
+                                                {% for t in teams %}
+                                                <option value="{{ t.id }}" {% if state.bidder_id == t.id %}selected{% endif %}>
+                                                    {{ t.team_name }} ({{ t.team_short_name }}) — Purse Rem: ₹{{ "%.2f"|format(t.player_purse - t.player_spent) }}Cr
+                                                </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 col-lg-3">
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-dark border-secondary text-white-50">₹</span>
+                                            <input type="number" step="0.01" min="0.01" name="bid_amount" class="form-control bg-dark border-secondary text-light" placeholder="Bid Amount (Cr)">
+                                            <span class="input-group-text bg-dark border-secondary text-white-50">Cr</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 col-lg-2">
+                                        <button type="submit" class="btn btn-warning text-dark fw-bold w-100 py-2">
+                                            <i class="bi bi-plus-circle me-1"></i>BID
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -96,47 +189,42 @@
         </div>
         <script>
             let lastAdminBid = "{{ state.current_bid }}";
+            let lastAdminBidder = "{{ state.bidder_id }}";
             async function fetchAdminLiveState() {
                 try {
                     const res = await fetch("/auction/api/state");
                     const data = await res.json();
-                    
                     if (data.status === "idle" || data.player_id !== "{{ state.player_id }}") {
-                        window.location.reload(); 
+                        window.location.reload();
                         return;
                     }
-                    
-                    if (data.current_bid != lastAdminBid) {
+                    if (data.current_bid != lastAdminBid || data.bidder_id != lastAdminBidder) {
                         lastAdminBid = data.current_bid;
-                        
+                        lastAdminBidder = data.bidder_id;
                         const bidEl = document.getElementById('adminCurrentBid');
                         bidEl.innerText = "₹" + data.current_bid + "Cr";
                         bidEl.style.color = "#4ade80";
                         bidEl.style.transform = "scale(1.1)";
-                        setTimeout(() => { bidEl.style.color = ""; bidEl.style.transform = "scale(1)"; }, 500);
-                        
-                        document.getElementById('adminBidderId').innerText = data.bidder_id || 'NONE';
-                        
+                        setTimeout(() => { bidEl.style.color = ""; bidEl.style.transform = "scale(1)"; }, 250);
+                        document.getElementById('adminBidderId').innerText = data.team_name || data.bidder_id || 'NONE';
                         const soldBtn = document.getElementById('adminSoldBtn');
-                        if (data.bidder_id) {
-                            soldBtn.disabled = false;
-                        } else {
-                            soldBtn.disabled = true;
-                        }
+                        soldBtn.disabled = !data.bidder_id;
                     }
-                } catch (e) {
-                    console.error("Admin fetch error", e);
-                }
+                } catch (e) { /* silent */ }
             }
-            setInterval(fetchAdminLiveState, 3000);
+            setInterval(fetchAdminLiveState, 2000);
         </script>
         {% endif %}
 
         <!-- Available Players List -->
         <div class="col-12">
             <div class="glass-card">
-                <div class="card-header py-3">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <h5 class="mb-0 fw-bold"><i class="bi bi-list-ul me-2 text-info"></i>Select Player for Bidding</h5>
+                    <div class="input-group" style="max-width: 300px;">
+                        <span class="input-group-text bg-dark border-secondary text-white-50"><i class="bi bi-search"></i></span>
+                        <input type="text" id="playerSearch" class="form-control bg-dark border-secondary text-white" placeholder="Search by name, ID, or role...">
+                    </div>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -145,35 +233,37 @@
                                 <tr>
                                     <th class="ps-4">ID</th>
                                     <th>Player</th>
-                                    <th>Role</th>
+                                    <th>Type</th>
                                     <th>Base Price</th>
-                                    <th>Stats (M/SR/Eco)</th>
                                     <th class="text-end pe-4">Action</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="playerTableBody">
                                 {% for p in players %}
-                                <tr>
-                                    <td class="ps-4"><span class="badge bg-secondary">{{ p.player_id }}</span></td>
+                                <tr data-category="{{ p._collection }}">
+                                    <td class="ps-4"><span class="badge bg-secondary">{{ p.id }}</span></td>
                                     <td>
                                         <div class="fw-bold">{{ p.player_name }}</div>
                                         <small class="text-muted">{{ p.nationality }}</small>
                                     </td>
-                                    <td><span class="badge role-badge-{{ p.role|replace(' ','_')|replace('-','_')|lower }}">{{ p.role }}</span></td>
-                                    <td><span class="text-warning fw-bold">₹{{ p.base_price }}Cr</span></td>
                                     <td>
-                                        <span class="badge bg-dark border border-info me-1">{{ p.matches or 0 }} M</span>
-                                        <span class="badge bg-dark border border-warning me-1">{{ p.strike_rate or 0 }} SR</span>
-                                        <span class="badge bg-dark border border-success">{{ p.economy or 0 }} EC</span>
+                                      {% if p._collection == 'batters' %}<span class="badge role-badge-batsman">BATTER</span>
+                                      {% elif p._collection == 'bowlers' %}<span class="badge role-badge-bowler">BOWLER</span>
+                                      {% elif p._collection == 'all_rounders' %}<span class="badge role-badge-all_rounder">ALL-ROUNDER</span>
+                                      {% elif p._collection == 'wicket_keepers' %}<span class="badge role-badge-wicket_keeper_batter">WICKET KEEPER</span>
+                                      {% endif %}
                                     </td>
+                                    <td><span class="text-warning fw-bold">₹{{ p.base_price }}Cr</span></td>
                                     <td class="text-end pe-4">
-                                        <form method="POST" action="{{ url_for('auction.start_player', pid=p.player_id) }}">
-                                            <button type="submit" class="btn btn-sm btn-primary fw-bold" {% if state.status == 'bidding' %}disabled{% endif %}>
+                                        <form method="POST" action="{{ url_for('auction.start_player', pid=p.id) }}">
+                                            <button type="submit" class="btn btn-sm btn-primary fw-bold">
                                                 <i class="bi bi-play-fill me-1"></i>GO LIVE
                                             </button>
                                         </form>
                                     </td>
                                 </tr>
+                                {% else %}
+                                <tr><td colspan="5" class="text-center py-5 text-muted">No available players.</td></tr>
                                 {% endfor %}
                             </tbody>
                         </table>
@@ -185,11 +275,222 @@
   </main>
 </div>
 
+<div class="modal fade" id="teamSquadModal" tabindex="-1" aria-labelledby="teamSquadModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content text-white border-0 shadow-lg" style="background: var(--surface-3); border-radius: var(--radius-lg); border: 2px solid var(--ipl-gold) !important;">
+      <div class="modal-header border-0 pb-0 d-flex align-items-center gap-3">
+        <div id="modalTeamLogoContainer" class="rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; overflow:hidden; background: rgba(255,255,255,0.05); border: 2px solid #fff;">
+            <i class="bi bi-shield-fill text-warning fs-3"></i>
+        </div>
+        <div>
+            <h4 class="modal-title fw-bold" id="teamSquadModalLabel">Team Squad</h4>
+            <span class="badge bg-warning text-dark fw-bold" id="modalSquadCount">0 Players</span>
+        </div>
+        <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body pt-4">
+        <!-- Team Stats Row -->
+        <div class="row g-3 mb-4 text-center">
+            <div class="col-4">
+                <div class="p-2 rounded bg-dark border border-secondary">
+                    <small class="text-muted d-block">TOTAL PURSE</small>
+                    <span class="fs-5 fw-bold text-white" id="modalTotalPurse">₹80.00Cr</span>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="p-2 rounded bg-dark border border-secondary">
+                    <small class="text-muted d-block">SPENT</small>
+                    <span class="fs-5 fw-bold text-danger" id="modalSpentPurse">₹0.00Cr</span>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="p-2 rounded bg-dark border border-secondary">
+                    <small class="text-muted d-block">REMAINING</small>
+                    <span class="fs-5 fw-bold text-success" id="modalRemainingPurse">₹80.00Cr</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Squad List Table -->
+        <div class="table-responsive" style="max-height: 350px;">
+            <table class="table table-dark table-striped align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-3">ID</th>
+                        <th>Player Name</th>
+                        <th>Category</th>
+                        <th class="text-end pe-3">Sold Price</th>
+                    </tr>
+                </thead>
+                <tbody id="modalSquadTableBody">
+                    <tr>
+                        <td colspan="4" class="text-center text-muted py-4">Loading squad players...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+      </div>
+      <div class="modal-footer border-0 pt-0 d-flex justify-content-between">
+        <form id="modalPushLiveForm" method="POST" action="" class="w-100">
+            <button type="submit" class="btn btn-warning text-dark fw-bold w-100 py-3 shadow-lg btn-no-style-hover" style="border-radius: var(--radius-md);">
+                <i class="bi bi-broadcast text-danger me-2 blink"></i>PUSH TEAM TO LIVE SCREEN (GO LIVE)
+            </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+    let currentCategoryFilter = 'all';
+
+    function filterByCategory(category, element) {
+        currentCategoryFilter = category;
+        
+        // Update active button classes
+        document.querySelectorAll('.category-filter-btn').forEach(btn => {
+            btn.classList.remove('active', 'btn-info');
+            btn.classList.add('btn-outline-info');
+        });
+        
+        if (element) {
+            element.classList.remove('btn-outline-info');
+            element.classList.add('btn-info', 'active');
+        } else {
+            const allBtn = document.getElementById('filter-btn-all');
+            if (allBtn) {
+                allBtn.classList.remove('btn-outline-info');
+                allBtn.classList.add('btn-info', 'active');
+            }
+        }
+        
+        applyFilters();
+    }
+
+    function applyFilters() {
+        let searchText = document.getElementById('playerSearch').value.toUpperCase();
+        let rows = document.querySelectorAll('#playerTableBody tr');
+        let visibleCount = 0;
+        
+        rows.forEach(row => {
+            // Skip "no available players" row if it is displayed
+            if (row.cells.length === 1 && row.cells[0].colSpan === 5) {
+                return;
+            }
+            
+            let rowCategory = row.getAttribute('data-category');
+            let matchesCategory = (currentCategoryFilter === 'all' || rowCategory === currentCategoryFilter);
+            let matchesSearch = row.innerText.toUpperCase().indexOf(searchText) > -1;
+            
+            if (matchesCategory && matchesSearch) {
+                row.style.display = "";
+                visibleCount++;
+            } else {
+                row.style.display = "none";
+            }
+        });
+    }
+
+    // Bind search input to apply both filters
+    document.getElementById('playerSearch').addEventListener('keyup', applyFilters);
+
+    // Dynamic Team Squad Modal population via AJAX API call
+    let teamSquadModal;
+    document.addEventListener('DOMContentLoaded', () => {
+        teamSquadModal = new bootstrap.Modal(document.getElementById('teamSquadModal'));
+    });
+
+    async function showTeamSquad(teamId) {
+        const tableBody = document.getElementById('modalSquadTableBody');
+        tableBody.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-4"><div class="spinner-border spinner-border-sm text-warning me-2" role="status"></div>Loading squad players...</td></tr>`;
+        
+        // Dynamically point PUSH TO LIVE button form to showcase team
+        document.getElementById('modalPushLiveForm').action = `/admin/auction/showcase-team/${teamId}`;
+        
+        teamSquadModal.show();
+        
+        try {
+            const res = await fetch(`/auction/api/team-squad/${teamId}`);
+            const data = await res.json();
+            
+            if (!data.success) {
+                tableBody.innerHTML = `<tr><td colspan="4" class="text-center text-danger py-4">Error: ${data.error}</td></tr>`;
+                return;
+            }
+            
+            // Update modal info
+            document.getElementById('teamSquadModalLabel').innerText = `${data.team_name} (${data.team_short_name}) Squad`;
+            document.getElementById('modalSquadCount').innerText = `${data.squad_count} Players`;
+            document.getElementById('modalTotalPurse').innerText = `₹${data.player_purse.toFixed(2)}Cr`;
+            document.getElementById('modalSpentPurse').innerText = `₹${data.player_spent.toFixed(2)}Cr`;
+            document.getElementById('modalRemainingPurse').innerText = `₹${data.player_remaining.toFixed(2)}Cr`;
+            
+            // Highlight color
+            const modalContent = document.querySelector('#teamSquadModal .modal-content');
+            modalContent.style.borderColor = data.team_color || 'var(--ipl-gold)';
+            
+            // Logo Container
+            const logoContainer = document.getElementById('modalTeamLogoContainer');
+            if (data.team_logo) {
+                logoContainer.innerHTML = `<img src="${data.team_logo}" style="width: 100%; height: 100%; object-fit: cover;">`;
+                logoContainer.style.borderColor = data.team_color || '#fff';
+            } else {
+                logoContainer.innerHTML = `<i class="bi bi-shield-fill text-warning fs-3"></i>`;
+                logoContainer.style.borderColor = '#fff';
+            }
+            
+            // Population
+            if (data.squad.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-4">No players purchased yet.</td></tr>`;
+            } else {
+                let html = '';
+                data.squad.forEach(p => {
+                    let roleBadge = '';
+                    if (p.category === 'batters') roleBadge = '<span class="badge role-badge-batsman">BATTER</span>';
+                    else if (p.category === 'bowlers') roleBadge = '<span class="badge role-badge-bowler">BOWLER</span>';
+                    else if (p.category === 'all_rounders') roleBadge = '<span class="badge role-badge-all_rounder">ALL-ROUNDER</span>';
+                    else if (p.category === 'wicket_keepers') roleBadge = '<span class="badge role-badge-wicket_keeper_batter">WICKET KEEPER</span>';
+                    else roleBadge = `<span class="badge bg-secondary">${p.category.toUpperCase()}</span>`;
+                    
+                    html += `
+                        <tr>
+                            <td class="ps-3"><span class="badge bg-secondary">${p.id}</span></td>
+                            <td>
+                                <div class="fw-bold text-white">${p.name}</div>
+                                <small class="text-muted">${p.nationality}</small>
+                            </td>
+                            <td>${roleBadge}</td>
+                            <td class="text-end pe-3 text-warning fw-bold">₹${p.sold_price.toFixed(2)}Cr</td>
+                        </tr>
+                    `;
+                });
+                tableBody.innerHTML = html;
+            }
+        } catch (e) {
+            tableBody.innerHTML = `<tr><td colspan="4" class="text-center text-danger py-4">Error loading squad data.</td></tr>`;
+        }
+    }
+</script>
+
 <style>
     .animate-glow-pulse { animation: glowPulse 2s ease-in-out infinite; }
     @keyframes glowPulse {
         0%, 100% { border-color: var(--ipl-gold); box-shadow: 0 0 10px rgba(251, 191, 36, 0.2); }
         50% { border-color: #fff; box-shadow: 0 0 30px rgba(251, 191, 36, 0.4); }
+    }
+    .fw-900 { font-weight: 900; }
+    .btn-no-style {
+        background: none;
+        border: 1px solid rgba(255,255,255,0.15);
+        color: white;
+        padding: 0;
+        cursor: pointer;
+        text-align: left;
+    }
+    .btn-no-style:hover {
+        background: rgba(255,255,255,0.05);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }
 </style>
 {% endblock %}

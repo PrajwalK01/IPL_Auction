@@ -1,29 +1,11 @@
 {% extends "base.html" %}
 {% block title %}{{ action }} Team — Admin{% endblock %}
 {% block navbar %}
-<nav class="navbar navbar-dark dashboard-navbar px-3 py-2 shadow-sm navbar-expand-lg">
-  <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="{{ url_for('dashboard.index') }}">
-    <span class="navbar-logo-icon"><i class="bi bi-cricket"></i></span>
-    <span>IPL <span class="text-warning">Auction</span></span>
-  </a>
-  <div class="ms-auto d-flex gap-2">
-    <a href="{{ url_for('admin_teams.list_teams') }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Back to Teams</a>
-    <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-outline-danger">Logout</a>
-  </div>
-</nav>
+{% include 'components/navbar.html' %}
 {% endblock %}
 {% block content %}
 <div class="dashboard-wrapper">
-  <aside class="dashboard-sidebar">
-    <div class="sidebar-section-label">ADMIN MENU</div>
-    <ul class="sidebar-nav list-unstyled mb-0">
-      <li><a href="{{ url_for('dashboard.index') }}" class="sidebar-link"><i class="bi bi-grid-1x2-fill"></i><span>Dashboard</span></a></li>
-      <li><a href="{{ url_for('admin_players.list_players') }}" class="sidebar-link"><i class="bi bi-people-fill"></i><span>Players</span></a></li>
-      <li><a href="{{ url_for('admin_teams.list_teams') }}" class="sidebar-link active"><i class="bi bi-shield-shaded"></i><span>Teams</span></a></li>
-      <li><a href="{{ url_for('admin_teams.team_credentials') }}" class="sidebar-link"><i class="bi bi-key-fill"></i><span>Credentials</span></a></li>
-    </ul>
-
-  </aside>
+  {% include 'components/sidebar.html' %}
   <main class="dashboard-main">
     <div class="row justify-content-center">
       <div class="col-12 col-lg-8 col-xl-7">
@@ -77,6 +59,7 @@
                   <input type="password" name="password" class="form-control bg-dark border-secondary text-light"
                          placeholder="{% if team %}Leave blank to keep current{% else %}Set login password{% endif %}"
                          {% if not team %}required{% endif %}>
+                  <small class="text-muted"><i class="bi bi-lock-fill me-1"></i>Will be stored as plain-text per your request.</small>
                 </div>
               </div>
 
@@ -118,13 +101,12 @@
                 </div>
               </div>
 
-
               {% if team %}
               <div class="mb-3">
                 <label class="form-label fw-medium">Status</label>
-                <select name="IsActive" class="form-select bg-dark border-secondary text-light">
-                  <option value="1" {% if team.IsActive %}selected{% endif %}>Active</option>
-                  <option value="0" {% if not team.IsActive %}selected{% endif %}>Inactive</option>
+                <select name="is_active" class="form-select bg-dark border-secondary text-light">
+                  <option value="1" {% if team.is_active %}selected{% endif %}>Active</option>
+                  <option value="0" {% if not team.is_active %}selected{% endif %}>Inactive</option>
                 </select>
               </div>
               {% endif %}
